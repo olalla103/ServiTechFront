@@ -93,10 +93,15 @@ useEffect(() => {
       <Boton titulo="Entrar" onPress={handleEmailLogin} disabled={!role} />
 
       <Boton
-        titulo="Registrarme"
-        onPress={() => router.push({ pathname: '/register', params: { role } })}
-        disabled={!role}
-      />
+  titulo="Registrarme"
+  onPress={() =>
+    router.push({
+      pathname: '/auth/register',
+      params: { role },
+    })
+  }
+/>
+
     </View>
   );
 }

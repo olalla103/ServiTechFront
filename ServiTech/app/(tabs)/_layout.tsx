@@ -1,45 +1,40 @@
-import { Tabs } from 'expo-router';
+// app/_layout.tsx
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { Platform } from 'react-native';
 
-import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/interfazusuario/IconSymbol';
-import TabBarBackground from '@/components/interfazusuario/TabBarBackground';
-import { Colors } from '@/constants/Colors';
+import { AuthProvider } from '@/components/AuthProvider';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
-export default function TabLayout() {
+// Crea el cliente **una sola vez**, fuera del componente
+const queryClient = new QueryClient();
+
+export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
-    </Tabs>
+    <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
+          {/*
+            Aquí usamos **Stack** vacío: Expo Router detecta
+            todos los archivos en app/ y registra rutas automáticamente.
+          */}
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              // Si quisieras pestañas, en lugar de Stack usarías <Tabs>...
+              // Pero si de verdad quieres tabs, cambia esto por:
+              // <Tabs screenOptions={{ ... }} />
+              // y en babel/metro no mezcles Stack y Tabs en el mismo layout.
+            }}
+          />
+          <StatusBar style="auto" />
+        </ThemeProvider>
+      </QueryClientProvider>
+    </AuthProvider>
   );
 }

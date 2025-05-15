@@ -11,11 +11,11 @@ export default function RoleScreen() {
     <View style={styles.container}>
       <Boton
         titulo="Soy Cliente"
-        onPress={() => router.push({ pathname: '/login', params: { role: 'cliente' } })}
+        onPress={() => router.push({ pathname: '/auth/login', params: { role: 'cliente' } })}
       />
       <Boton
         titulo="Soy Técnico"
-        onPress={() => router.push({ pathname: '/login', params: { role: 'tecnico' } })}
+        onPress={() => router.push({ pathname: '/auth/login', params: { role: 'tecnico' } })}
       />
     </View>
   );
