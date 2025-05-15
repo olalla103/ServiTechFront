@@ -8,19 +8,19 @@ const tintColorDark = '#fff';
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    text: '#11181C',           // Color del texto principal en modo claro
+    background: '#fff',        // Fondo en modo claro
+    tint: tintColorLight,      // Color de acento (azul: #0a7ea4)
+    icon: '#687076',           // Color de iconos en modo claro
+    tabIconDefault: '#687076', // Icono de pestaña (no seleccionado)
+    tabIconSelected: tintColorLight, // Icono de pestaña (seleccionado)
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    text: '#ECEDEE',           // Color del texto principal en modo oscuro
+    background: '#151718',     // Fondo en modo oscuro
+    tint: tintColorDark,       // Color de acento (blanco: #fff)
+    icon: '#9BA1A6',           // Color de iconos en modo oscuro
+    tabIconDefault: '#9BA1A6', // Icono de pestaña (no seleccionado)
+    tabIconSelected: tintColorDark, // Icono de pestaña (seleccionado)
   },
 };
