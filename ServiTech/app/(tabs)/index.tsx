@@ -1,33 +1,18 @@
+import Boton from '@/components/interfazusuario/boton';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import Boton from '../../components/interfazusuario/boton';
 
 export default function HomeScreen() {
   const router = useRouter();
   return (
     <View style={styles.container}>
-      {/* Aquí veremos el botón */}
-      <Boton
-        titulo="Usuarios"
-        onPress={() => router.push('/explore')}
-      />
-      <Boton
-        titulo="Clientes"
-        onPress={() => router.push('/explore')}
-      />
-      <Boton
-        titulo="Artículos"
-        onPress={() => router.push('/explore')}
-      />
-      <Boton
-        titulo="Incidencias"
-        onPress={() => router.push('/incidencias')}
-      />
-      <Boton
-        titulo="Informes"
-        onPress={() => router.push('/explore')}
-      />
+      {/*Pantalla de inicio de la aplicación */}
+      <Boton titulo='Login' onPress={()=>router.push('/auth/login')}/>
+      {/*Condicional para usar los botones o el login dependiendo
+      de si el usuario está registrado*/}
+      <Boton titulo='Menú botones' onPress={()=>router.push('/(tabs)/menu')}/>
+
     </View>
     
   );

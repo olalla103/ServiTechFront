@@ -17,7 +17,7 @@ export default function Boton({ titulo, onPress,disabled=false }: BotonUsuarioPr
 
 const styles = StyleSheet.create({
   boton: {
-    backgroundColor: '#23cebe',
+    backgroundColor: '#22c1b2',
     paddingVertical: 12,
     borderRadius: 8,
     marginVertical: 20,
