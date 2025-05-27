@@ -11,25 +11,24 @@ import {
   View
 } from 'react-native';
 import Fondo from '../../components/fondo'; // Ajusta la ruta si es necesario
-import { verificarCredenciales } from '../../utils/handler_usuarios';
+import { useAuth } from '../../context/AuthProvider';
 
 export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { login, loading } = useAuth();
+
+
 
   const handleEmailLogin = async () => {
     setError(null);
-    setLoading(true);
     try {
-      await verificarCredenciales(email, pass);
-      router.replace('/');
+      await login(email, pass); // <-- ¡Debe llamar a login del contexto!
+      router.replace('/autonomo/pantallautonomoinicio');
     } catch (e: any) {
       setError(e.message || 'Error desconocido');
-    } finally {
-      setLoading(false);
     }
   };
 

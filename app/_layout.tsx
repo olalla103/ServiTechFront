@@ -7,9 +7,69 @@ import React from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { AuthProvider, useAuth } from '../context/AuthProvider'; // Ajusta la ruta
 
 // Instanciamos el QueryClient una sola vez
 const queryClient = new QueryClient();
+
+// Función para saber el tipo de usuario
+type TipoUsuario = "autonomo" | "admin_empresa" | "tecnico" | "cliente";
+function getTipoUsuario(user: any): TipoUsuario {
+  if (user?.admin_empresa && !!user.especialidad) return "autonomo";
+  if (user?.admin_empresa && !user.especialidad) return "admin_empresa";
+  if (!user?.admin_empresa && !!user.especialidad) return "tecnico";
+  return "cliente";
+}
+
+// Este componente va dentro del AuthProvider
+function RootNavigator() {
+  const { user, loading } = useAuth();
+
+  // Espera a que cargue la sesión (importante)
+  if (loading) return null; // O un loader/spinner si quieres
+
+  // Si no hay usuario logueado, mostramos las pantallas de auth
+  if (!user) {
+    return (
+      <Stack>
+        <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)/register" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)/role" options={{ headerShown: false }} />
+        {/* Otras screens de auth si tienes */}
+      </Stack>
+    );
+  }
+
+  // Ya hay usuario logueado: elegimos pantalla por tipo
+  const tipo = getTipoUsuario(user);
+
+  if (tipo === "autonomo") {
+    // Home autónomo, más adelante puedes anidar aquí un stack/tab propio para autónomos
+    return (
+      <Stack>
+        <Stack.Screen name="autonomo/home" options={{ headerShown: false }} />
+        {/* Otras screens del autónomo */}
+      </Stack>
+    );
+  }
+
+  // if (tipo === "admin_empresa") {
+  //   // Stack de admin empresa
+  // }
+  // if (tipo === "tecnico") {
+  //   // Stack de técnico
+  // }
+  // if (tipo === "cliente") {
+  //   // Stack de cliente
+  // }
+
+  // Si no coincide ninguno, fallback
+  return (
+    <Stack>
+      <Stack.Screen name="+not-found" />
+    </Stack>
+  );
+}
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -23,19 +83,13 @@ export default function RootLayout() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          Strack screenOp
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
-          <Stack.Screen name="(auth)/role" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)/register" options={{ headerShown: false }} />
-
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    </QueryClientProvider>
+    <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <RootNavigator />
+          <StatusBar style="auto" />
+        </ThemeProvider>
+      </QueryClientProvider>
+    </AuthProvider>
   );
 }
