@@ -26,7 +26,7 @@ export default function LoginScreen() {
     setError(null);
     try {
       await login(email, pass); // <-- ¡Debe llamar a login del contexto!
-      router.replace('/autonomo/pantallautonomoinicio');
+      router.replace('/autonomo');
     } catch (e: any) {
       setError(e.message || 'Error desconocido');
     }

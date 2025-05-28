@@ -18,6 +18,27 @@ export async function getIncidenciaPorId(id: number) {
   return res.data;
 }
 
+export async function getIncidenciasEnReparacionPorTecnico(tecnicoId: number) {
+  const res = await api.get(`/incidencias/tecnico/${tecnicoId}/en-reparacion`);
+  return res.data;
+}
+
+export async function getIncidenciasPendientesPorTecnico(tecnicoId: number) {
+  const res = await api.get(`/incidencias/tecnico/${tecnicoId}/pendientes`);
+  return res.data;
+}
+
+export async function getIncidenciasResueltasPorTecnico(tecnicoId: number) {
+  const res = await api.get(`/incidencias/tecnico/${tecnicoId}/resueltas`);
+  return res.data;
+}
+
+
+export async function getIncidenciasAutonomo(userId: number) {
+  const res = await api.get(`/incidencias?autonomo_id=${userId}`);
+  return res.data;
+}
+
 // 4. Actualizar una incidencia
 export async function actualizarIncidencia(id: number, datos: any) {
   const res = await api.put(`/incidencias/${id}`, datos);

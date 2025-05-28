@@ -1,23 +1,35 @@
 import * as SecureStore from 'expo-secure-store';
-import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-import { verificarCredenciales } from '../utils/handler_usuarios'; // Ajusta la ruta si es necesario
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { verificarCredenciales } from '../utils/handler_usuarios'; // Ajusta la ruta
 
-const AuthContext = createContext<any>(null);
+type AuthContextType = {
+  user: any;
+  token: string | null;
+  loading: boolean;
+  login: (email: string, contraseña: string) => Promise<void>;
+  logout: () => Promise<void>;
+};
 
-export const useAuth = () => useContext(AuthContext);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// ESTE ES EL HOOK QUE DEBES EXPORTAR Y USAR EN TUS COMPONENTES
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<any>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Leer token y usuario al arrancar la app
   useEffect(() => {
     const loadSession = async () => {
       const storedToken = await SecureStore.getItemAsync('token');
       const storedUser = await SecureStore.getItemAsync('user');
-      console.log('CARGANDO TOKEN DE SECURESTORE:', storedToken);
-      console.log('CARGANDO USER DE SECURESTORE:', storedUser);
       if (storedToken) setToken(storedToken);
       if (storedUser) setUser(JSON.parse(storedUser));
       setLoading(false);
@@ -25,18 +37,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loadSession();
   }, []);
 
-  // Login: pide el token y guarda usuario/token en SecureStore
   const login = async (email: string, contraseña: string) => {
     setLoading(true);
     try {
       const res = await verificarCredenciales(email, contraseña);
-      console.log("RESPUESTA DEL LOGIN:", res);
       if (res.access_token) {
         await SecureStore.setItemAsync('token', res.access_token);
         setToken(res.access_token);
-
         if (res.user) {
-          console.log('GUARDANDO USER EN SECURESTORE:', res.user);
           await SecureStore.setItemAsync('user', JSON.stringify(res.user));
           setUser(res.user);
         } else {
@@ -54,7 +62,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Logout: borra token y usuario del almacenamiento seguro
   const logout = async () => {
     await SecureStore.deleteItemAsync('token');
     await SecureStore.deleteItemAsync('user');

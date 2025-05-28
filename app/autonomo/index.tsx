@@ -1,16 +1,16 @@
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useAuth } from '../../context/AuthProvider'; // Ajusta la ruta
-// import Fondo from '../../components/fondo'; // No lo usamos aquí para fondo blanc
-import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '../../context/AuthProvider';
+
 export default function AutonomoHomeScreen() {
   const { user,loading } = useAuth();
   console.log("USER EN PANTALLA ", user);
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
- if (loading || !user) {
+if (loading || !user) {
   // Puedes poner un loader, un texto de "Cargando..." o simplemente return null;
   return <Text style={{color: "#2edbd1", fontSize: 24, marginTop: 70}}>Cargando...</Text>;
 }
@@ -28,8 +28,8 @@ export default function AutonomoHomeScreen() {
           title="Incidencias"
           icon="🛠️"
           color="#ffe082"
-          onPress={() => router.push('/tecnico/pantallaincidencias')}
-          badge={3}
+          onPress={() => router.push('/incidencias')}
+          //badge={3}
         />
         <Card
           title="Clientes"
@@ -47,7 +47,8 @@ export default function AutonomoHomeScreen() {
           title="Perfil"
           icon="🧑‍💼"
           color="#b39ddb"
-          /*onPress={() => {'/autonomo/perfil'}}*/
+         // onPress={() => router.push('/autonomo/perfil')}
+
         />
       </ScrollView>
     </View>

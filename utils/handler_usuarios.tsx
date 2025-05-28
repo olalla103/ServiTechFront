@@ -73,6 +73,11 @@ export async function verificarCredenciales(email: string, contraseña: string) 
   return res.data;
 }
 
+export async function getClientesPorEmpresa(empresaId: string) {
+  const res = await api.get(`/clientes/empresa/${empresaId}`);
+  return res.data;
+}
+
 // --- 3. Eliminación ---
 
 // Eliminar usuario

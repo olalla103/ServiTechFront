@@ -13,5 +13,5 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-, ".vscode/explore.tsx"  ]
+, ".vscode/explore.tsx", "app/incidencias/index.jsx", "app/_layout.tsx"  ]
 }

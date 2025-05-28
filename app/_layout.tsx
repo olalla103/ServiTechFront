@@ -5,9 +5,9 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import 'react-native-reanimated';
+import { AuthProvider, useAuth } from '../context/AuthProvider';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { AuthProvider, useAuth } from '../context/AuthProvider'; // Ajusta la ruta
 
 // Instanciamos el QueryClient una sola vez
 const queryClient = new QueryClient();
@@ -23,18 +23,17 @@ function getTipoUsuario(user: any): TipoUsuario {
 
 // Este componente va dentro del AuthProvider
 function RootNavigator() {
-  const { user, loading } = useAuth();
+  const { user, loading, login, logout } = useAuth();
 
   // Espera a que cargue la sesión (importante)
   if (loading) return null; // O un loader/spinner si quieres
 
   // Si no hay usuario logueado, mostramos las pantallas de auth
   if (!user) {
+    console.log('Sin usuario: stack auth');
     return (
       <Stack>
-        <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)/register" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)/role" options={{ headerShown: false }} />
+        <Stack.Screen name="auth"/>
         {/* Otras screens de auth si tienes */}
       </Stack>
     );
@@ -44,11 +43,12 @@ function RootNavigator() {
   const tipo = getTipoUsuario(user);
 
   if (tipo === "autonomo") {
+    console.log('Stack autonomo');
     // Home autónomo, más adelante puedes anidar aquí un stack/tab propio para autónomos
     return (
-      <Stack>
-        <Stack.Screen name="autonomo/pantallautonomoinicio" options={{ headerShown: false }} />
-        <Stack.Screen name="tecnico/pantallaincidencias" options={{ headerShown: false }} />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="autonomo"/>
+        <Stack.Screen name="incidencias"/>
       </Stack>
     );
   }
@@ -57,9 +57,12 @@ function RootNavigator() {
   //   // Stack de admin empresa
   // }
   if (tipo === "tecnico") {
+    console.log('Stack tecnico');
     // Stack de técnico
     return(
-    <Stack.Screen name="tecnico/pantallaincidencias" options={{ headerShown: false }} />
+      <Stack>
+        <Stack.Screen name="incidencias"/>
+      </Stack>
     );
   }
   // if (tipo === "cliente") {
@@ -87,6 +90,7 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
+
       <QueryClientProvider client={queryClient}>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <RootNavigator />
