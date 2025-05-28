@@ -1,32 +1,34 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useAuth } from '../../../context/AuthProvider'; // Ajusta la ruta
+import { useAuth } from '../../context/AuthProvider'; // Ajusta la ruta
 // import Fondo from '../../components/fondo'; // No lo usamos aquí para fondo blanc
- 
+import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function AutonomoHomeScreen() {
   const { user,loading } = useAuth();
   console.log("USER EN PANTALLA ", user);
- /* const router = useRouter();*/
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
 
  if (loading || !user) {
   // Puedes poner un loader, un texto de "Cargando..." o simplemente return null;
-  return <Text style={{color: "#2edbd1", fontSize: 24, marginTop: 40}}>Cargando...</Text>;
+  return <Text style={{color: "#2edbd1", fontSize: 24, marginTop: 70}}>Cargando...</Text>;
 }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top + 50 }]}>
       {/* Cabecera con saludo */}
       <View style={styles.header}>
         <Text style={styles.saludo}>¡Hola, {user.nombre}!</Text>
         <Text style={styles.subtitulo}>Panel de gestión de tu negocio</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.grid,{paddingTop:80}]} showsVerticalScrollIndicator={false}>
         <Card
           title="Incidencias"
           icon="🛠️"
           color="#ffe082"
-          /*onPress={() => router.push('/autonomo/facturas')}*/
+          onPress={() => router.push('/tecnico/pantallaincidencias')}
           badge={3}
         />
         <Card
@@ -70,12 +72,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f7f8fa', // Fondo súper claro
-    paddingTop: 38,
+    paddingTop: 80,
     paddingHorizontal: 16,
   },
   header: {
     marginBottom: 10,
     alignItems: 'center',
+     marginTop: 34
   },
   saludo: {
     fontSize: 28,
@@ -102,19 +105,21 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   card: {
-    width: 150,
-    height: 120,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    margin: 9,
-    elevation: 4,
-    shadowColor: '#0004',
-    shadowOffset: { width: 1, height: 3 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    position: 'relative',
-  },
+  width: '47%', // O 48% para que haya margen
+  minWidth: 150, // Para pantallas muy pequeñas
+  height: 120,
+  borderRadius: 24,
+  alignItems: 'center',
+  justifyContent: 'center',
+  marginBottom: 16,
+  elevation: 4,
+  shadowColor: '#0004',
+  shadowOffset: { width: 1, height: 3 },
+  shadowOpacity: 0.12,
+  shadowRadius: 8,
+  position: 'relative',
+}
+,
   cardIcon: {
     fontSize: 36,
     marginBottom: 4,

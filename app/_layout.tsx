@@ -47,8 +47,8 @@ function RootNavigator() {
     // Home autónomo, más adelante puedes anidar aquí un stack/tab propio para autónomos
     return (
       <Stack>
-        <Stack.Screen name="autonomo/home" options={{ headerShown: false }} />
-        {/* Otras screens del autónomo */}
+        <Stack.Screen name="autonomo/pantallautonomoinicio" options={{ headerShown: false }} />
+        <Stack.Screen name="tecnico/pantallaincidencias" options={{ headerShown: false }} />
       </Stack>
     );
   }
@@ -56,9 +56,12 @@ function RootNavigator() {
   // if (tipo === "admin_empresa") {
   //   // Stack de admin empresa
   // }
-  // if (tipo === "tecnico") {
-  //   // Stack de técnico
-  // }
+  if (tipo === "tecnico") {
+    // Stack de técnico
+    return(
+    <Stack.Screen name="tecnico/pantallaincidencias" options={{ headerShown: false }} />
+    );
+  }
   // if (tipo === "cliente") {
   //   // Stack de cliente
   // }
