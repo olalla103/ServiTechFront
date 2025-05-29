@@ -14,7 +14,7 @@ export default function ClienteItem({ cliente }: { cliente: Cliente }) {
       activeOpacity={0.7}
     >
       <Text style={styles.nombre}>{cliente.nombre} {cliente.apellido1} {cliente.apellido2}</Text>
-      <Text style={styles.direccion}>{cliente.direccion}</Text>
+      <Text style={styles.direccion}>{cliente.email}</Text>
     </TouchableOpacity>
   );
 }

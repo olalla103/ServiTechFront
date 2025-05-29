@@ -49,6 +49,7 @@ function RootNavigator() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="autonomo"/>
         <Stack.Screen name="incidencias"/>
+        <Stack.Screen name="clientes/index"/>
       </Stack>
     );
   }
@@ -62,6 +63,7 @@ function RootNavigator() {
     return(
       <Stack>
         <Stack.Screen name="incidencias"/>
+        <Stack.Screen name="clientes/index"/>
       </Stack>
     );
   }

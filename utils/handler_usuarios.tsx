@@ -74,9 +74,15 @@ export async function verificarCredenciales(email: string, contraseña: string) 
 }
 
 export async function getClientesPorEmpresa(empresaId: string) {
-  const res = await api.get(`/clientes/empresa/${empresaId}`);
+  const res = await api.get(`/usuarios/clientes/empresa/${empresaId}`);
   return res.data;
 }
+
+export async function getClienteById(clienteId: string) {
+  const res = await api.get(`/usuarios/clientes/${clienteId}`);
+  return res.data;
+}
+
 
 // --- 3. Eliminación ---
 

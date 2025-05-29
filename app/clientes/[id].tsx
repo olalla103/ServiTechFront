@@ -3,15 +3,15 @@ import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Cliente } from '../../types/cliente';
-import { getClientesPorEmpresa } from '../../utils/handler_usuarios';
+import { getUsuarioPorId } from '../../utils/handler_usuarios';
 
 export default function DetalleClienteScreen() {
   const { id } = useLocalSearchParams();
-  const clienteId = typeof id === "string" ? id : String(id); // Por si acaso
+  const clienteId = typeof id === "string" ? parseInt(id, 10) : Number(id); // Convertir a int
 
   const { data: cliente, isLoading, error } = useQuery<Cliente>({
     queryKey: ['cliente', clienteId],
-    queryFn: () => getClientesPorEmpresa(clienteId),
+    queryFn: () => getUsuarioPorId(clienteId),
     enabled: !!clienteId,
   });
 
@@ -33,6 +33,10 @@ export default function DetalleClienteScreen() {
       <Text style={styles.title}>
         {cliente.nombre} {cliente.apellido1}{cliente.apellido2 ? ` ${cliente.apellido2}` : ''}
       </Text>
+      <View style={styles.card}>
+        <Text style={styles.label}>Nombre y apellidos:</Text>
+        <Text style={styles.value}>{cliente.nombre} {cliente.apellido1}{cliente.apellido2 ? ` ${cliente.apellido2}` : ''}</Text>
+      </View>
       <View style={styles.card}>
         <Text style={styles.label}>Dirección:</Text>
         <Text style={styles.value}>{cliente.direccion || "No disponible"}</Text>
@@ -65,6 +69,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     color: '#2edbd1',
+    marginTop:80,
     marginBottom: 20,
     textAlign: 'center',
   },
