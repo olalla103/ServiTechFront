@@ -4,14 +4,23 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { Usuario } from '../types/usuario';
 
-export default function ClienteItem({ cliente }: { cliente: Usuario }) {
+type Props = {
+  cliente: Usuario;
+  eliminando?: boolean;
+  onSeleccionar?: () => void;
+};
+
+export default function ClienteItem({ cliente, eliminando = false, onSeleccionar }: Props) {
   const router = useRouter();
 
   return (
     <TouchableOpacity
-      style={styles.item}
-      onPress={() => router.push({ pathname: '/clientes/[id]', params: { id: cliente.id } })}
-      activeOpacity={0.7}
+      style={[
+        styles.item,
+        eliminando && { backgroundColor: '#ffe4e1', borderWidth: 2, borderColor: '#EFBA93' }
+      ]}
+      onPress={eliminando && onSeleccionar ? onSeleccionar : () => { router.push({ pathname: '/clientes/[id]', params: { id: cliente.id } }) }}
+      activeOpacity={eliminando ? 0.6 : 0.8}
     >
       <Text style={styles.nombre}>{cliente.nombre} {cliente.apellido1} {cliente.apellido2}</Text>
       <Text style={styles.direccion}>{cliente.email}</Text>

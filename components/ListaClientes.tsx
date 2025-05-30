@@ -5,15 +5,21 @@ import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, View } from '
 import { Usuario } from '../types/usuario';
 import ClienteItem from './ClienteItem';
 
-export default function ListaClientes({
-  title,
-  query,
-  emptyMessage
-}: {
+type Props = {
   title?: string;
   query: UseQueryResult<Usuario[], Error>;
   emptyMessage?: string;
-}) {
+  eliminando?: boolean;
+  onSeleccionarCliente?: (cliente: Usuario) => void;
+};
+
+export default function ListaClientes({
+  title,
+  query,
+  emptyMessage,
+  eliminando = false,
+  onSeleccionarCliente,
+}: Props) {
   const { data, isLoading, error } = query;
   const [search, setSearch] = useState('');
 
@@ -43,7 +49,13 @@ export default function ListaClientes({
   return (
     <FlatList
       data={filteredClientes}
-      renderItem={({ item }) => <ClienteItem cliente={item} />}
+      renderItem={({ item }) => (
+        <ClienteItem
+          cliente={item}
+          eliminando={eliminando}
+          onSeleccionar={onSeleccionarCliente ? () => onSeleccionarCliente(item) : undefined}
+        />
+      )}
       keyExtractor={item => String(item.id)}
       ListHeaderComponent={
         <View>
@@ -65,7 +77,6 @@ export default function ListaClientes({
         </Text>
       }
       contentContainerStyle={{ paddingBottom: 40, paddingHorizontal: 10 }}
-      // Elimina scrollEnabled={false} (que te limita el scroll)
     />
   );
 }
