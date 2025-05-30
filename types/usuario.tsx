@@ -1,5 +1,7 @@
+import { Direccion } from "./direccion";
+
 // types/cliente.ts
-export type Cliente = {
+export type Usuario = {
   id: number;
   nombre: string;
   apellido1?: string;
@@ -8,4 +10,5 @@ export type Cliente = {
   email?: string;
   telefono?: string;
   empresa_id: string;
+  direcciones?: Direccion[]; // <-- ¡este es el campo importante!
 };

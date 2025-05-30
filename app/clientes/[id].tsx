@@ -1,15 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams } from 'expo-router';
-import React from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Cliente } from '../../types/cliente';
+import React, { useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Usuario } from '../../types/usuario';
 import { getUsuarioPorId } from '../../utils/handler_usuarios';
 
 export default function DetalleClienteScreen() {
   const { id } = useLocalSearchParams();
   const clienteId = typeof id === "string" ? parseInt(id, 10) : Number(id); // Convertir a int
+  const [showDirecciones, setShowDirecciones] = useState(false);
 
-  const { data: cliente, isLoading, error } = useQuery<Cliente>({
+  const { data: cliente, isLoading, error } = useQuery<Usuario>({
     queryKey: ['cliente', clienteId],
     queryFn: () => getUsuarioPorId(clienteId),
     enabled: !!clienteId,
@@ -38,8 +39,23 @@ export default function DetalleClienteScreen() {
         <Text style={styles.value}>{cliente.nombre} {cliente.apellido1}{cliente.apellido2 ? ` ${cliente.apellido2}` : ''}</Text>
       </View>
       <View style={styles.card}>
-        <Text style={styles.label}>Dirección:</Text>
-        <Text style={styles.value}>{cliente.direccion || "No disponible"}</Text>
+        <TouchableOpacity onPress={() => setShowDirecciones(open => !open)}>
+          <Text style={styles.label}>
+            Direcciones ({cliente.direcciones?.length || 0}) {showDirecciones ? "▲" : "▼"}
+          </Text>
+        </TouchableOpacity>
+        {showDirecciones && (
+          cliente.direcciones && cliente.direcciones.length > 0
+            ? cliente.direcciones.map((dir, idx) => (
+                <View key={dir.id ?? idx} style={styles.direccionCard}>
+                  <Text style={styles.value}>
+                    {dir.calle ?? ''} {dir.numero ?? ''}{dir.piso ? `, Piso ${dir.piso}` : ''}{dir.puerta ? `, Puerta ${dir.puerta}` : ''}{'\n'}
+                    {dir.cp ?? ''} {dir.ciudad ?? ''}{dir.provincia ? ` (${dir.provincia})` : ''}{dir.pais ? `, ${dir.pais}` : ''}
+                  </Text>
+                </View>
+              ))
+            : <Text style={styles.value}>No hay direcciones registradas</Text>
+        )}
       </View>
       <View style={styles.card}>
         <Text style={styles.label}>Email:</Text>
@@ -90,6 +106,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 4,
     letterSpacing: 0.2,
+  },
+  direccionCard: {
+    backgroundColor: '#f1f3f7',
+    borderRadius: 8,
+    padding: 8,
+    marginVertical: 4,
   },
   value: {
     fontSize: 16,

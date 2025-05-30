@@ -2,9 +2,9 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity } from 'react-native';
-import { Cliente } from '../types/cliente';
+import { Usuario } from '../types/usuario';
 
-export default function ClienteItem({ cliente }: { cliente: Cliente }) {
+export default function ClienteItem({ cliente }: { cliente: Usuario }) {
   const router = useRouter();
 
   return (
