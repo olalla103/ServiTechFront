@@ -10,6 +10,7 @@ type Props = {
   query: UseQueryResult<Usuario[], Error>;
   emptyMessage?: string;
   eliminando?: boolean;
+  editando?: boolean; 
   onSeleccionarCliente?: (cliente: Usuario) => void;
 };
 
@@ -18,6 +19,7 @@ export default function ListaClientes({
   query,
   emptyMessage,
   eliminando = false,
+  editando = false,
   onSeleccionarCliente,
 }: Props) {
   const { data, isLoading, error } = query;
@@ -53,6 +55,7 @@ export default function ListaClientes({
         <ClienteItem
           cliente={item}
           eliminando={eliminando}
+          editando={editando}
           onSeleccionar={onSeleccionarCliente ? () => onSeleccionarCliente(item) : undefined}
         />
       )}

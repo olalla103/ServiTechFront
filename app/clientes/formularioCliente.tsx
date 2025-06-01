@@ -17,6 +17,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { useAuth } from '../../context/AuthProvider';
 
 export default function FormularioCliente({ onClose }: { onClose: () => void }) {
@@ -30,17 +31,22 @@ export default function FormularioCliente({ onClose }: { onClose: () => void }) 
   const [fechaNacimiento, setFechaNacimiento] = useState<Date | undefined>();
   const [showDate, setShowDate] = useState(false);
   const inputAccessoryViewID = 'uniqueID';
+  const [mostrarModal, setMostrarModal] = useState(false);
+  const [usuarioCreadoEmail, setUsuarioCreadoEmail] = useState<number | null>(null);
 
   const queryClient = useQueryClient();
 
-  const mutation = useMutation({
-    mutationFn: crearUsuario,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clientes-empresa'] });
-      onClose();
-    },
-    onError: () => Alert.alert("Error", "No se pudo crear el cliente"),
-  });
+ const mutation = useMutation({
+  mutationFn: crearUsuario,
+  onSuccess: (nuevousuario) => {
+    queryClient.invalidateQueries({ queryKey: ['clientes-empresa'] });
+    setUsuarioCreadoEmail(nuevousuario.email); // guarda el id del usuario
+    setMostrarModal(true);                // muestra el modal de pregunta
+    // No llames a onClose() aquí
+  },
+  onError: () => Alert.alert("Error", "No se pudo crear el cliente"),
+});
+
 
 //   const mutation = useMutation({
 //   mutationFn: debugUsuario,   // usa debugUsuario aquí
@@ -72,6 +78,34 @@ export default function FormularioCliente({ onClose }: { onClose: () => void }) 
     setShowDate(true);
   };
 
+  const handleCerrarTodo = () => {
+  setMostrarModal(false);
+  setUsuarioCreadoEmail(null);
+  Toast.show({
+    type: 'success',
+    text1: '¡Éxito!',
+    text2: 'Cliente creado correctamente',
+    position: 'bottom',
+  });
+  if (onClose) {
+    onClose();
+  } else {
+    router.back(); // Vuelve atrás si no hay prop
+  }
+};
+
+
+   const handleAbrirDirecciones = () => {
+    console.log(usuarioCreadoEmail)
+    router.push({
+  pathname: '/clientes/formularioDirecciones',
+  params: { usuarioEmail: usuarioCreadoEmail }
+});
+setMostrarModal(false)
+
+  };
+
+
   const handleSubmit = () => {
     if (!nombre || !apellido1 || !email || !telefono || !contraseña) {
       Alert.alert('Completa todos los campos obligatorios');
@@ -97,7 +131,7 @@ export default function FormularioCliente({ onClose }: { onClose: () => void }) 
   
   return (
     <View style={{ flex: 1 }}>
-      {/* Flecha de volver */}
+       {/* Flecha de volver */}
       <TouchableOpacity
         style={styles.iconoFlecha}
         onPress={() => router.back()}
@@ -181,10 +215,37 @@ export default function FormularioCliente({ onClose }: { onClose: () => void }) 
         <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={mutation.isPending}>
           <Text style={styles.buttonText}>Añadir Cliente</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+        <TouchableOpacity style={styles.cancelButton} onPress={handleCerrarTodo}>
           <Text style={{ color: '#888', fontWeight: 'bold' }}>Cancelar</Text>
         </TouchableOpacity>
       </View>
+      {/* --- Modal para preguntar si añadir direcciones --- */}
+      <Modal
+        visible={mostrarModal}
+        transparent
+        animationType="fade"
+        onRequestClose={handleCerrarTodo}
+      >
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.3)',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}>
+          <View style={{
+            backgroundColor: 'white',
+            borderRadius: 16,
+            padding: 24,
+            minWidth: 250,
+            alignItems: 'center'
+          }}>
+            <Text style={{ fontSize: 18, marginBottom: 18, fontWeight: 'bold' }}>¿Quieres añadir direcciones?</Text>
+            <Button title="Sí" onPress={handleAbrirDirecciones} />
+            <View style={{ height: 10 }} />
+            <Button title="No" onPress={handleCerrarTodo} color="#888" />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

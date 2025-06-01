@@ -7,20 +7,25 @@ import { Usuario } from '../types/usuario';
 type Props = {
   cliente: Usuario;
   eliminando?: boolean;
+   editando?: boolean; // <-- Nuevo
   onSeleccionar?: () => void;
 };
 
-export default function ClienteItem({ cliente, eliminando = false, onSeleccionar }: Props) {
+export default function ClienteItem({ cliente, eliminando = false, editando=false, onSeleccionar }: Props) {
   const router = useRouter();
+
+    const extraStyle = eliminando
+    ? { backgroundColor: '#ffe4e1', borderWidth: 2, borderColor: '#EFBA93' }
+    : editando
+      ? { backgroundColor: '#ffeec7', borderWidth: 2, borderColor: '#EFD9AA' }
+      : {};
+
 
   return (
     <TouchableOpacity
-      style={[
-        styles.item,
-        eliminando && { backgroundColor: '#ffe4e1', borderWidth: 2, borderColor: '#EFBA93' }
-      ]}
-      onPress={eliminando && onSeleccionar ? onSeleccionar : () => { router.push({ pathname: '/clientes/[id]', params: { id: cliente.id } }) }}
-      activeOpacity={eliminando ? 0.6 : 0.8}
+      style={[styles.item, extraStyle]}
+      onPress={onSeleccionar ? onSeleccionar : () => { router.push({ pathname: '/clientes/[id]', params: { id: cliente.id } }) }}
+      activeOpacity={eliminando || editando ? 0.6 : 0.8}
     >
       <Text style={styles.nombre}>{cliente.nombre} {cliente.apellido1} {cliente.apellido2}</Text>
       <Text style={styles.direccion}>{cliente.email}</Text>

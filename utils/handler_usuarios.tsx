@@ -14,6 +14,18 @@ export async function getUsuarioPorId(usuario_id: number) {
   return res.data;
 }
 
+export async function getUsuarioIdByEmail(email: string) {
+  try {
+    const res = await api.get(`/usuarios/usuarios/id_por_email`, {
+      params: {email}
+    });
+    return res.data.id;
+  } catch (err) {
+    console.error("Error:", err);
+    return null;
+  }
+}
+
 // Buscar usuario por nombre y apellidos
 export async function buscarUsuario(nombre: string, apellido1: string, apellido2: string) {
   const res = await api.get('/usuarios/buscar', {

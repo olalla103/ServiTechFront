@@ -18,6 +18,7 @@ export default function PantallaClientes() {
   const [eliminando, setEliminando] = useState(false);
   const [clienteAEliminar, setClienteAEliminar] = useState<Usuario | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [editando, setEditando] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -99,15 +100,21 @@ export default function PantallaClientes() {
           <TouchableOpacity style={styles.menuButtonAniadir} onPress={() => {router.push('/clientes/formularioCliente')}}>
             <Text style={styles.menuButtonText}>Añadir</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.menuButtonEditar} onPress={() => { /* lógica editar */ }}>
-            <Text style={styles.menuButtonText}>Editar</Text>
-          </TouchableOpacity>
           <TouchableOpacity
-            style={styles.menuButtonEliminar}
-            onPress={() => setEliminando(true)}
-          >
-            <Text style={styles.menuButtonText}>Eliminar</Text>
-          </TouchableOpacity>
+  style={styles.menuButtonEditar}
+  onPress={() => setEditando(prev => !prev)}>
+  <Text style={styles.menuButtonText}>
+    {editando ? 'SALIR' : 'Editar'}
+  </Text>
+</TouchableOpacity>
+          <TouchableOpacity
+  style={styles.menuButtonEliminar}
+  onPress={() => setEliminando(prev => !prev)}
+>
+  <Text style={styles.menuButtonText}>
+    {eliminando ? 'SALIR' : 'Eliminar'}
+  </Text>
+</TouchableOpacity>
         </MotiView>
       )}
 
@@ -120,15 +127,28 @@ export default function PantallaClientes() {
         }}
         style={{ flex: 1 }}
       >
-        <ListaClientes
-          query={clientesQuery}
-          emptyMessage="No hay clientes para esta empresa."
-          eliminando={eliminando}
-          onSeleccionarCliente={cliente => {
-            setClienteAEliminar(cliente);
-            setModalVisible(true);
-          }}
-        />
+      <ListaClientes
+  query={clientesQuery}
+  emptyMessage="No hay clientes para esta empresa."
+  eliminando={eliminando}
+  editando={editando} 
+  onSeleccionarCliente={cliente => {
+  if (eliminando) {
+    setClienteAEliminar(cliente);
+    setModalVisible(true);
+  } else if (editando) {
+    router.push({
+      pathname: '/clientes/pantallaClienteEditar',
+      params: { clienteEmail: cliente.email }
+    });
+    setEditando(false);
+  } else {
+    // Solo mostrar detalle
+    router.push({ pathname: '/clientes/[id]', params: { id: cliente.id } });
+  }
+}}
+/>
+
       </MotiView>
 
       {/* Modal de confirmación */}
@@ -203,7 +223,7 @@ const styles = StyleSheet.create({
     left: 18,
     zIndex: 10,
     padding: 8,
-    backgroundColor: '#f8f9fb',
+    backgroundColor: '#fff',
     borderRadius: 20,
     elevation: 4,
   },

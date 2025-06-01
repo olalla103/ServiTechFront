@@ -1,14 +1,19 @@
+import { Direccion } from '@/types/direccion';
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Usuario } from '../../types/usuario';
 import { getUsuarioPorId } from '../../utils/handler_usuarios';
 
+type DireccionConId = Direccion & { id?: number; _nueva?: boolean; _eliminar?: boolean };
+
 export default function DetalleClienteScreen() {
   const { id } = useLocalSearchParams();
   const clienteId = typeof id === "string" ? parseInt(id, 10) : Number(id); // Convertir a int
   const [showDirecciones, setShowDirecciones] = useState(false);
+
 
   const { data: cliente, isLoading, error } = useQuery<Usuario>({
     queryKey: ['cliente', clienteId],
@@ -30,6 +35,14 @@ export default function DetalleClienteScreen() {
     );
 
   return (
+    <>
+     <TouchableOpacity
+        style={styles.iconoFlecha}
+        onPress={() => router.back()}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="arrow-back" size={28} color="#2edbd1" />
+      </TouchableOpacity>
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>
         {cliente.nombre} {cliente.apellido1}{cliente.apellido2 ? ` ${cliente.apellido2}` : ''}
@@ -47,12 +60,16 @@ export default function DetalleClienteScreen() {
         {showDirecciones && (
           cliente.direcciones && cliente.direcciones.length > 0
             ? cliente.direcciones.map((dir, idx) => (
-                <View key={dir.id ?? idx} style={styles.direccionCard}>
-                  <Text style={styles.value}>
-                    {dir.calle ?? ''} {dir.numero ?? ''}{dir.piso ? `, Piso ${dir.piso}` : ''}{dir.puerta ? `, Puerta ${dir.puerta}` : ''}{'\n'}
-                    {dir.cp ?? ''} {dir.ciudad ?? ''}{dir.provincia ? ` (${dir.provincia})` : ''}{dir.pais ? `, ${dir.pais}` : ''}
-                  </Text>
-                </View>
+                <View key={(dir as any).id ?? idx} style={styles.direccionCard}>
+  <Text style={styles.value}>
+    {dir.calle ?? ''} {dir.numero ?? ''}
+    {dir.piso ? `, Piso ${dir.piso}` : ''}
+    {dir.puerta ? `, Puerta ${dir.puerta}` : ''}{'\n'}
+    {dir.cp ?? ''} {dir.ciudad ?? ''}
+    {dir.provincia ? ` (${dir.provincia})` : ''}
+    {dir.pais ? `, ${dir.pais}` : ''}
+  </Text>
+</View>
               ))
             : <Text style={styles.value}>No hay direcciones registradas</Text>
         )}
@@ -67,6 +84,7 @@ export default function DetalleClienteScreen() {
       </View>
       {/* Puedes añadir más campos aquí */}
     </ScrollView>
+  </>
   );
 }
 
@@ -107,6 +125,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 4,
     letterSpacing: 0.2,
+  },
+     iconoFlecha: {
+    position: 'absolute',
+    top: 50,
+    left: 18,
+    zIndex: 10,
+    padding: 8,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    elevation: 4,
   },
   direccionCard: {
     backgroundColor: '#f1f3f7',
