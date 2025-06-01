@@ -1,6 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
+import { router } from 'expo-router';
 import React from 'react';
-import { ScrollView, StyleSheet, Text } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import ListaIncidencias from '../../components/ListaIncidencias';
 import { useAuth } from '../../context/AuthProvider';
 import {
@@ -33,6 +35,14 @@ export default function PantallaIncidencias() {
 
 
   return (
+    <>
+     <TouchableOpacity
+        style={styles.iconoFlecha}
+        onPress={() => router.back()}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="arrow-back" size={28} color="#2edbd1" />
+      </TouchableOpacity>
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
       <Text style={styles.headerIncidencias}>
         Lista de incidencias, pulse en una para obtener más información sobre ella.
@@ -41,6 +51,7 @@ export default function PantallaIncidencias() {
       <ListaIncidencias title="En curso" query={enReparacionQuery} />
       <ListaIncidencias title="Últimas finalizadas" query={resueltasQuery} />
     </ScrollView>
+    </>
   );
 }
 
@@ -59,4 +70,14 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'center',
   },
+   iconoFlecha: {
+    position: 'absolute',
+    top: 50,
+    left: 18,
+    zIndex: 10,
+    padding: 8,
+    backgroundColor: '#f8f9fb',
+    borderRadius: 20,
+    elevation: 4,
+  }
 });

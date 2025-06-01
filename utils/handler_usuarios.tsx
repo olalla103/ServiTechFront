@@ -61,6 +61,13 @@ export async function crearUsuario(usuario: any) {
   return res.data;
 }
 
+export async function debugUsuario(usuario:any) {
+  // Cambia '/usuarios/debug' por la ruta de tu endpoint de FastAPI
+  console.log("DEBUG JSON que se enviará:", usuario);
+  const res = await api.post('/usuarios/debug', usuario);
+  return res.data;
+}
+
 // Actualizar usuario (incluye cambiar teléfono)
 export async function actualizarUsuario(usuario_id: number, datos: any) {
   const res = await api.patch(`/usuarios/${usuario_id}`, datos);
@@ -82,7 +89,6 @@ export async function getClienteById(clienteId: string) {
   const res = await api.get(`/usuarios/clientes/${clienteId}`);
   return res.data;
 }
-
 
 // --- 3. Eliminación ---
 

@@ -31,6 +31,7 @@ export default function PantallaClientes() {
         queryClient.invalidateQueries({ queryKey: ['clientes-empresa'] });
       } catch (error) {
         alert("Error eliminando el usuario");
+        alert(error)
       }
     }
   };
@@ -95,7 +96,7 @@ export default function PantallaClientes() {
           pointerEvents={showMenu ? 'auto' : 'none'}
           onLayout={event => setMenuHeight(event.nativeEvent.layout.height)}
         >
-          <TouchableOpacity style={styles.menuButtonAniadir} onPress={() => { /* lógica añadir */ }}>
+          <TouchableOpacity style={styles.menuButtonAniadir} onPress={() => {router.push('/clientes/formularioCliente')}}>
             <Text style={styles.menuButtonText}>Añadir</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.menuButtonEditar} onPress={() => { /* lógica editar */ }}>
@@ -196,7 +197,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     elevation: 4,
   },
-  iconoFlecha: {
+   iconoFlecha: {
     position: 'absolute',
     top: 50,
     left: 18,

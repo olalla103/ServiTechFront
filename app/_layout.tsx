@@ -61,10 +61,13 @@ function RootNavigator() {
     console.log('Stack tecnico');
     // Stack de técnico
     return(
+      
+     
       <Stack>
         <Stack.Screen name="incidencias"/>
         <Stack.Screen name="clientes/index"/>
       </Stack>
+      
     );
   }
   // if (tipo === "cliente") {

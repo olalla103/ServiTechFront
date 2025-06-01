@@ -1,7 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Incidencia } from '../../types/incidencia';
 import { getIncidenciaPorId } from '../../utils/handler_incidencias';
 import { getUsuarioPorId } from '../../utils/handler_usuarios'; // Ajusta la ruta si es necesario
@@ -51,6 +52,14 @@ export default function DetalleIncidenciaScreen() {
   }
 
   return (
+    <>
+     <TouchableOpacity
+        style={styles.iconoFlecha}
+        onPress={() => router.back()}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="arrow-back" size={28} color="#2edbd1" />
+      </TouchableOpacity>
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 24 }}>
       <Text style={styles.title}>Detalle de incidencia</Text>
       
@@ -94,6 +103,7 @@ export default function DetalleIncidenciaScreen() {
         </View>
       </View>
     </ScrollView>
+  </>
   );
 }
 
@@ -125,6 +135,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 6,
     elevation: 2,
+  },
+  iconoFlecha: {
+    position: 'absolute',
+    top: 50,
+    left: 18,
+    zIndex: 10,
+    padding: 8,
+    backgroundColor: '#f8f9fb',
+    borderRadius: 20,
+    elevation: 4,
   },
   cardRow: {
     flexDirection: 'row',

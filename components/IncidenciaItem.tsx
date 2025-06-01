@@ -8,18 +8,24 @@ export default function IncidenciaItem({ incidencia }: { incidencia: Incidencia 
   console.log("IncidenciaItem, id:", incidencia.id);
 
   return (
-    <TouchableOpacity
-      style={styles.item}
-      onPress={() => router.push(`/incidencias/${incidencia.id}`)}
-      activeOpacity={0.6}
-    >
-      <Text style={styles.itemTitle}>{incidencia.direccion}</Text>
-      <Text style={styles.itemDesc}>{incidencia.descripcion}</Text>
-    </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.item}
+        onPress={() => router.push(`/incidencias/${incidencia.id}`)}
+        activeOpacity={0.6}
+      >
+        <Text style={styles.itemTitle}>{incidencia.direccion}</Text>
+        <Text style={styles.itemDesc}>{incidencia.descripcion}</Text>
+      </TouchableOpacity>
+
   );
 }
 
 const styles = StyleSheet.create({
+  iconoFlecha: {
+    marginBottom: 10,
+    alignSelf: 'flex-start',
+    padding: 8,
+  },
   item: {
     backgroundColor: '#fff',
     borderRadius: 14,
@@ -39,5 +45,5 @@ const styles = StyleSheet.create({
   itemDesc: {
     color: '#555',
     fontSize: 15,
-  },
+  }
 });
