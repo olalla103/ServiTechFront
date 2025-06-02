@@ -36,13 +36,13 @@ export default function PantallaIncidencias() {
 
   return (
     <>
-     <TouchableOpacity
-        style={styles.iconoFlecha}
-        onPress={() => router.back()}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="arrow-back" size={28} color="#2edbd1" />
-      </TouchableOpacity>
+    <TouchableOpacity
+       style={styles.iconoFlecha}
+       onPress={() => router.push('/autonomo')}
+       activeOpacity={0.8}
+     >
+       <Ionicons name="arrow-back" size={28} color="#2edbd1" />
+     </TouchableOpacity>
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
       <Text style={styles.headerIncidencias}>
         Lista de incidencias, pulse en una para obtener más información sobre ella.

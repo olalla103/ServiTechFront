@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import CronometroIncidencia from '../../components/CronometroIncidencia'; // ajusta la ruta si es necesario
 import { Incidencia } from '../../types/incidencia';
 import { getIncidenciaPorId } from '../../utils/handler_incidencias';
 import { getUsuarioPorId } from '../../utils/handler_usuarios'; // Ajusta la ruta si es necesario
@@ -34,6 +35,11 @@ export default function DetalleIncidenciaScreen() {
     enabled: !!tecnicoId,
   });
 
+  function horasToSeconds(horas: string) {
+    const [h, m, s] = horas.split(':').map(Number);
+    return h * 3600 + m * 60 + s;
+  }
+
   // 3. Returns condicionales DESPUÉS de los hooks
   if (isLoading) {
     return (
@@ -53,57 +59,77 @@ export default function DetalleIncidenciaScreen() {
 
   return (
     <>
-     <TouchableOpacity
+      <TouchableOpacity
         style={styles.iconoFlecha}
         onPress={() => router.back()}
         activeOpacity={0.8}
       >
         <Ionicons name="arrow-back" size={28} color="#2edbd1" />
       </TouchableOpacity>
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 24 }}>
-      <Text style={styles.title}>Detalle de incidencia</Text>
-      
-      <View style={styles.card}>
-        <Text style={styles.label}>📍 Dirección</Text>
-        <Text style={styles.value}>{incidencia.direccion || "No disponible"}</Text>
-      </View>
+      <ScrollView style={styles.container} contentContainerStyle={{ padding: 24 }}>
+        <Text style={styles.title}>Detalle de incidencia</Text>
+        
+        <View style={styles.card}>
+          <Text style={styles.label}>📍 Dirección</Text>
+          <Text style={styles.value}>{incidencia.direccion || "No disponible"}</Text>
+        </View>
 
-      <View style={styles.card}>
-        <Text style={styles.label}>📝 Descripción</Text>
-        <Text style={styles.value}>{incidencia.descripcion || "No disponible"}</Text>
-      </View>
+        <View style={styles.card}>
+          <Text style={styles.label}>📝 Descripción</Text>
+          <Text style={styles.value}>{incidencia.descripcion || "No disponible"}</Text>
+        </View>
 
-      <View style={styles.cardRow}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.label}>⏱ Estado</Text>
-          <Text style={styles.value}>{incidencia.estado}</Text>
+        <View style={styles.cardRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.label}>⏱ Estado</Text>
+            <Text style={styles.value}>{incidencia.estado}</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.label}>🗓️ Fecha reporte</Text>
+            <Text style={styles.value}>{new Date(incidencia.fecha_reporte).toLocaleDateString()}</Text>
+          </View>
         </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.label}>🗓️ Fecha reporte</Text>
-          <Text style={styles.value}>{new Date(incidencia.fecha_reporte).toLocaleDateString()}</Text>
-        </View>
-      </View>
 
-      <View style={styles.cardRow}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.label}>👤 Cliente</Text>
-          <Text style={styles.value}>
-            {clienteQuery.data
-              ? `${clienteQuery.data.nombre} ${clienteQuery.data.apellidos} (ID: ${clienteQuery.data.id})`
-              : incidencia.cliente_id}
-          </Text>
+        <View style={styles.cardRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.label}>👤 Cliente</Text>
+            <Text style={styles.value}>
+              {clienteQuery.data
+                ? `${clienteQuery.data.nombre} ${clienteQuery.data.apellido1} ${clienteQuery.data.apellido2}`
+                : incidencia.cliente_id}
+            </Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.label}>👨‍🔧 Técnico</Text>
+            <Text style={styles.value}>
+              {tecnicoQuery.data
+                ? `${tecnicoQuery.data.nombre} ${tecnicoQuery.data.apellido1}${tecnicoQuery.data.apellido2}`
+                : (incidencia.tecnico_id || "Sin asignar")}
+            </Text>
+          </View>
         </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.label}>👨‍🔧 Técnico</Text>
-          <Text style={styles.value}>
-            {tecnicoQuery.data
-              ? `${tecnicoQuery.data.nombre} ${tecnicoQuery.data.apellidos} (ID: ${tecnicoQuery.data.id})`
-              : (incidencia.tecnico_id || "Sin asignar")}
-          </Text>
-        </View>
-      </View>
-    </ScrollView>
-  </>
+
+        {/* CRONÓMETRO O TIEMPO FINAL */}
+        {["pendiente", "en_reparacion"].includes(incidencia.estado) ? (
+          <View style={styles.card}>
+            <Text style={styles.label}>⏱ Tiempo de trabajo</Text>
+            <CronometroIncidencia
+              incidenciaId={Number(incidencia.id ?? 0)}
+              pausadaInicial={incidencia.pausada}
+              segundosIniciales={incidencia.horas ? horasToSeconds(incidencia.horas) : 0}
+            />
+          </View>
+        ) : (
+          <View style={styles.card}>
+            <Text style={styles.label}>⏱ Tiempo invertido</Text>
+            <Text style={styles.value}>
+              {incidencia.horas ? incidencia.horas : "No registrado"}
+            </Text>
+          </View>
+        )}
+
+      </ScrollView>
+    </>
   );
 }
 
