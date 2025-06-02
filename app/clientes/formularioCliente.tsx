@@ -1,11 +1,10 @@
-import { crearUsuario } from '@/utils/handler_usuarios';
+import AlertModal from '@/components/AlertModal';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  Alert,
   Button,
   InputAccessoryView,
   Keyboard,
@@ -15,10 +14,11 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useAuth } from '../../context/AuthProvider';
+import { crearUsuario } from '../../utils/handler_usuarios';
 
 export default function FormularioCliente({ onClose }: { onClose: () => void }) {
   const { user } = useAuth();
@@ -33,44 +33,37 @@ export default function FormularioCliente({ onClose }: { onClose: () => void }) 
   const inputAccessoryViewID = 'uniqueID';
   const [mostrarModal, setMostrarModal] = useState(false);
   const [usuarioCreadoEmail, setUsuarioCreadoEmail] = useState<number | null>(null);
+  const [errorVisible, setErrorVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const queryClient = useQueryClient();
 
- const mutation = useMutation({
-  mutationFn: crearUsuario,
-  onSuccess: (nuevousuario) => {
-    queryClient.invalidateQueries({ queryKey: ['clientes-empresa'] });
-    setUsuarioCreadoEmail(nuevousuario.email); // guarda el id del usuario
-    setMostrarModal(true);                // muestra el modal de pregunta
-    // No llames a onClose() aquí
-  },
-  onError: () => Alert.alert("Error", "No se pudo crear el cliente"),
-});
+  const mutation = useMutation({
+    mutationFn: crearUsuario,
+    onSuccess: (nuevousuario) => {
+      queryClient.invalidateQueries({ queryKey: ['clientes-empresa'] });
+      setUsuarioCreadoEmail(nuevousuario.email);
+      setMostrarModal(true);
+    },
+    onError: () => {
+      setErrorMessage('Ha ocurrido un error al crear el usuario.');
+      setErrorVisible(true);
+    },
+  });
 
-
-//   const mutation = useMutation({
-//   mutationFn: debugUsuario,   // usa debugUsuario aquí
-//   onSuccess: () => {
-//     queryClient.invalidateQueries({ queryKey: ['clientes-empresa'] });
-//     onClose();
-//   },
-//   onError: (error) => {
-//     Alert.alert("Error", "No se pudo crear el cliente");
-//     // Agrega esto para ver el error completo:
-//     console.log("Error completo:", error);
-//   },
-// });
-
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    if (Platform.OS === 'android') {
-      setShowDate(false);
-      if (event.type === 'set' && selectedDate) {
-        setFechaNacimiento(selectedDate);
-      }
-      return;
+  const handleDateChange = (_: DateTimePickerEvent, selectedDate?: Date) => {
+    if (selectedDate) {
+      const safeDate = new Date(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate(),
+        12,
+        0,
+        0
+      );
+      setFechaNacimiento(safeDate);
     }
-    // En iOS, actualiza la fecha en tiempo real, el modal se cierra con el botón "Hecho"
-    if (selectedDate) setFechaNacimiento(selectedDate);
+    if (Platform.OS === 'android') setShowDate(false);
   };
 
   const handleOpenDate = () => {
@@ -79,59 +72,55 @@ export default function FormularioCliente({ onClose }: { onClose: () => void }) 
   };
 
   const handleCerrarTodo = () => {
-  setMostrarModal(false);
-  setUsuarioCreadoEmail(null);
-  Toast.show({
-    type: 'success',
-    text1: '¡Éxito!',
-    text2: 'Cliente creado correctamente',
-    position: 'bottom',
-  });
-  if (onClose) {
-    onClose();
-  } else {
-    router.back(); // Vuelve atrás si no hay prop
-  }
-};
-
-
-   const handleAbrirDirecciones = () => {
-    console.log(usuarioCreadoEmail)
-    router.push({
-  pathname: '/clientes/formularioDirecciones',
-  params: { usuarioEmail: usuarioCreadoEmail }
-});
-setMostrarModal(false)
-
+    setMostrarModal(false);
+    setUsuarioCreadoEmail(null);
+    Toast.show({
+      type: 'success',
+      text1: '¡Éxito!',
+      text2: 'Cliente creado correctamente',
+      position: 'bottom',
+    });
+    if (onClose) {
+      onClose();
+    } else {
+      router.back();
+    }
   };
 
+  const handleAbrirDirecciones = () => {
+    router.push({
+      pathname: '/clientes/formularioDirecciones',
+      params: { usuarioEmail: usuarioCreadoEmail },
+    });
+    setMostrarModal(false);
+  };
 
   const handleSubmit = () => {
     if (!nombre || !apellido1 || !email || !telefono || !contraseña) {
-      Alert.alert('Completa todos los campos obligatorios');
+      setErrorMessage('Completa todos los campos obligatorios');
+      setErrorVisible(true);
       return;
     }
-    console.log(fechaNacimiento)
     mutation.mutate({
       nombre,
       apellido1,
       apellido2,
       email,
-      contraseña: contraseña,
+      contraseña,
       telefono,
       fecha_nacimiento: fechaNacimiento
-  ? fechaNacimiento.toISOString().split('T')[0]
-  : undefined,
+        ? fechaNacimiento.toISOString().split('T')[0]
+        : undefined,
       especialidad: null,
       numero_seguridad_social: null,
       admin_empresa: false,
       empresa_id: user.empresa_id,
     });
   };
-  
+
   return (
     <View style={{ flex: 1 }}>
-       {/* Flecha de volver */}
+      {/* Flecha de volver */}
       <TouchableOpacity
         style={styles.iconoFlecha}
         onPress={() => router.back()}
@@ -139,13 +128,29 @@ setMostrarModal(false)
       >
         <Ionicons name="arrow-back" size={28} color="#2edbd1" />
       </TouchableOpacity>
+
       <View style={styles.formContainer}>
         <Text style={styles.title}>Añadir Cliente</Text>
-        <TextInput placeholder="Nombre" style={styles.input} value={nombre} onChangeText={setNombre} />
-        <TextInput placeholder="Primer apellido" style={styles.input} value={apellido1} onChangeText={setApellido1} />
-        <TextInput placeholder="Segundo apellido" style={styles.input} value={apellido2} onChangeText={setApellido2} />
         <TextInput
-          placeholder="Email"
+          placeholder="Nombre *"
+          style={styles.input}
+          value={nombre}
+          onChangeText={setNombre}
+        />
+        <TextInput
+          placeholder="Primer apellido *"
+          style={styles.input}
+          value={apellido1}
+          onChangeText={setApellido1}
+        />
+        <TextInput
+          placeholder="Segundo apellido *"
+          style={styles.input}
+          value={apellido2}
+          onChangeText={setApellido2}
+        />
+        <TextInput
+          placeholder="Email *"
           style={styles.input}
           value={email}
           onChangeText={setEmail}
@@ -153,7 +158,7 @@ setMostrarModal(false)
           autoCapitalize="none"
         />
         <TextInput
-          placeholder="Contraseña"
+          placeholder="Contraseña *"
           style={styles.input}
           value={contraseña}
           onChangeText={setContraseña}
@@ -161,7 +166,7 @@ setMostrarModal(false)
           autoCapitalize="none"
         />
         <TextInput
-          placeholder="Teléfono"
+          placeholder="Teléfono *"
           style={styles.input}
           value={telefono}
           inputAccessoryViewID={Platform.OS === 'ios' ? inputAccessoryViewID : undefined}
@@ -182,7 +187,9 @@ setMostrarModal(false)
           activeOpacity={0.8}
         >
           <Text style={{ color: fechaNacimiento ? '#222' : '#999' }}>
-            {fechaNacimiento ? fechaNacimiento.toISOString().slice(0, 10) : 'Fecha de nacimiento'}
+            {fechaNacimiento
+              ? fechaNacimiento.toISOString().slice(0, 10)
+              : 'Fecha de nacimiento *'}
           </Text>
         </TouchableOpacity>
         {/* Modal para el DatePicker */}
@@ -212,40 +219,54 @@ setMostrarModal(false)
           </View>
         </Modal>
 
-        <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={mutation.isPending}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handleSubmit}
+          disabled={mutation.isPending}
+        >
           <Text style={styles.buttonText}>Añadir Cliente</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.cancelButton} onPress={handleCerrarTodo}>
           <Text style={{ color: '#888', fontWeight: 'bold' }}>Cancelar</Text>
         </TouchableOpacity>
       </View>
-      {/* --- Modal para preguntar si añadir direcciones --- */}
+
+      {/* Modal para preguntar si añadir direcciones */}
       <Modal
         visible={mostrarModal}
         transparent
         animationType="fade"
         onRequestClose={handleCerrarTodo}
       >
-        <View style={{
-          flex: 1,
-          backgroundColor: 'rgba(0,0,0,0.3)',
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}>
-          <View style={{
-            backgroundColor: 'white',
-            borderRadius: 16,
-            padding: 24,
-            minWidth: 250,
-            alignItems: 'center'
-          }}>
-            <Text style={{ fontSize: 18, marginBottom: 18, fontWeight: 'bold' }}>¿Quieres añadir direcciones?</Text>
-            <Button title="Sí" onPress={handleAbrirDirecciones} />
-            <View style={{ height: 10 }} />
-            <Button title="No" onPress={handleCerrarTodo} color="#888" />
+        <View style={styles.modalBackground}>
+          <View style={styles.customModal}>
+            <Text style={styles.customModalTitle}>
+              ¿Quieres añadir direcciones?
+            </Text>
+            <View style={{ flexDirection: 'row', marginTop: 12 }}>
+              <TouchableOpacity
+                style={styles.modalBtnSi}
+                onPress={handleAbrirDirecciones}
+              >
+                <Ionicons name="add-circle" size={20} color="#fff" style={{ marginRight: 6 }} />
+                <Text style={styles.modalBtnText}>Sí</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalBtnNo}
+                onPress={handleCerrarTodo}
+              >
+                <Ionicons name="close-circle" size={20} color="#888" style={{ marginRight: 6 }} />
+                <Text style={[styles.modalBtnText, { color: '#888' }]}>No</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
+      <AlertModal
+        visible={errorVisible}
+        message={errorMessage}
+        onClose={() => setErrorVisible(false)}
+      />
     </View>
   );
 }
@@ -262,6 +283,56 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.12,
     shadowRadius: 8,
+  },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  customModal: {
+    backgroundColor: '#fff',
+    borderRadius: 22,
+    padding: 28,
+    minWidth: 260,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.17,
+    shadowRadius: 12,
+    elevation: 7,
+  },
+  customModalTitle: {
+    fontSize: 19,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#00b2b7',
+    textAlign: 'center',
+  },
+  modalBtnSi: {
+    flexDirection: 'row',
+    backgroundColor: '#2edbd1',
+    paddingHorizontal: 26,
+    paddingVertical: 11,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginRight: 8,
+    elevation: 1,
+  },
+  modalBtnNo: {
+    flexDirection: 'row',
+    backgroundColor: '#ececec',
+    paddingHorizontal: 24,
+    paddingVertical: 11,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginLeft: 8,
+    elevation: 1,
+  },
+  modalBtnText: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#fff',
   },
   title: {
     fontSize: 20,
@@ -306,13 +377,6 @@ const styles = StyleSheet.create({
   cancelButton: {
     marginTop: 10,
     alignItems: 'center',
-  },
-  // Modal para fecha
-  modalBackground: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.2)',
   },
   pickerContainer: {
     backgroundColor: '#fff',

@@ -1,21 +1,43 @@
-import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import { Direccion } from '../../types/direccion';
 import { crearDireccionesMultiples } from '../../utils/handler_direcciones';
 
-const FormularioDirecciones: React.FC<{ onSuccess?: () => void; onCancel?: () => void }> = ({ onSuccess, onCancel }) => {
+const FormularioDirecciones: React.FC<{
+  onSuccess?: () => void;
+  onCancel?: () => void;
+}> = ({ onSuccess, onCancel }) => {
   const params = useLocalSearchParams();
   const usuarioEmail = Array.isArray(params.usuarioEmail)
     ? params.usuarioEmail[0]
     : params.usuarioEmail;
 
   const [direcciones, setDirecciones] = useState<Direccion[]>([
-    { calle: '', numero: '', piso: '', puerta: '', ciudad: '', cp: '', provincia: '', pais: '' }
+    {
+      calle: '',
+      numero: '',
+      piso: '',
+      puerta: '',
+      ciudad: '',
+      cp: '',
+      provincia: '',
+      pais: ''
+    }
   ]);
 
-  const handleDireccionChange = (index: number, campo: keyof Direccion, valor: string) => {
+  const handleDireccionChange = (
+    index: number,
+    campo: keyof Direccion,
+    valor: string
+  ) => {
     const nuevasDirecciones = [...direcciones];
     nuevasDirecciones[index][campo] = valor;
     setDirecciones(nuevasDirecciones);
@@ -24,53 +46,107 @@ const FormularioDirecciones: React.FC<{ onSuccess?: () => void; onCancel?: () =>
   const addDireccion = () => {
     setDirecciones([
       ...direcciones,
-      { calle: '', numero: '', piso: '', puerta: '', ciudad: '', cp: '', provincia: '', pais: '' }
+      {
+        calle: '',
+        numero: '',
+        piso: '',
+        puerta: '',
+        ciudad: '',
+        cp: '',
+        provincia: '',
+        pais: ''
+      }
     ]);
   };
 
   const removeDireccion = (index: number) => {
-    setDirecciones(direcciones => direcciones.filter((_, i) => i !== index));
+    setDirecciones(direcciones =>
+      direcciones.filter((_, i) => i !== index)
+    );
   };
 
   const handleSubmit = async () => {
     if (!usuarioEmail) {
       alert('No se encuentra el usuario');
-      router.push('/clientes/formularioCliente');
+      router.replace('/clientes');
       return;
     }
     try {
       await crearDireccionesMultiples(usuarioEmail, direcciones);
       onSuccess && onSuccess();
-      router.push('/clientes');
+      router.replace('/clientes');
     } catch (error) {
       alert(error);
     }
   };
 
+  const handleCancelar = () => {
+    if (onCancel) {
+      onCancel();
+    } else {
+      router.replace('/clientes');
+    }
+  };
+
   return (
-    <>
-    <TouchableOpacity
-        style={styles.iconoFlecha}
-        onPress={() => router.back()}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="arrow-back" size={28} color="#2edbd1" />
-      </TouchableOpacity>
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Añadir direcciones</Text>
       {direcciones.map((dir, idx) => (
         <View key={idx} style={styles.dirBox}>
           <Text style={styles.dirTitle}>Dirección {idx + 1}</Text>
-          <TextInput placeholder="Calle" value={dir.calle} onChangeText={val => handleDireccionChange(idx, 'calle', val)} style={styles.input} />
-          <TextInput placeholder="Número" value={dir.numero} onChangeText={val => handleDireccionChange(idx, 'numero', val)} style={styles.input} />
-          <TextInput placeholder="Piso" value={dir.piso} onChangeText={val => handleDireccionChange(idx, 'piso', val)} style={styles.input} />
-          <TextInput placeholder="Puerta" value={dir.puerta} onChangeText={val => handleDireccionChange(idx, 'puerta', val)} style={styles.input} />
-          <TextInput placeholder="Ciudad" value={dir.ciudad} onChangeText={val => handleDireccionChange(idx, 'ciudad', val)} style={styles.input} />
-          <TextInput placeholder="CP" value={dir.cp} onChangeText={val => handleDireccionChange(idx, 'cp', val)} style={styles.input} />
-          <TextInput placeholder="Provincia" value={dir.provincia} onChangeText={val => handleDireccionChange(idx, 'provincia', val)} style={styles.input} />
-          <TextInput placeholder="País" value={dir.pais} onChangeText={val => handleDireccionChange(idx, 'pais', val)} style={styles.input} />
+          <TextInput
+            placeholder="Calle"
+            value={dir.calle}
+            onChangeText={val => handleDireccionChange(idx, 'calle', val)}
+            style={styles.input}
+          />
+          <TextInput
+            placeholder="Número"
+            value={dir.numero}
+            onChangeText={val => handleDireccionChange(idx, 'numero', val)}
+            style={styles.input}
+          />
+          <TextInput
+            placeholder="Piso"
+            value={dir.piso}
+            onChangeText={val => handleDireccionChange(idx, 'piso', val)}
+            style={styles.input}
+          />
+          <TextInput
+            placeholder="Puerta"
+            value={dir.puerta}
+            onChangeText={val => handleDireccionChange(idx, 'puerta', val)}
+            style={styles.input}
+          />
+          <TextInput
+            placeholder="Ciudad"
+            value={dir.ciudad}
+            onChangeText={val => handleDireccionChange(idx, 'ciudad', val)}
+            style={styles.input}
+          />
+          <TextInput
+            placeholder="CP"
+            value={dir.cp}
+            onChangeText={val => handleDireccionChange(idx, 'cp', val)}
+            style={styles.input}
+          />
+          <TextInput
+            placeholder="Provincia"
+            value={dir.provincia}
+            onChangeText={val => handleDireccionChange(idx, 'provincia', val)}
+            style={styles.input}
+          />
+          <TextInput
+            placeholder="País"
+            value={dir.pais}
+            onChangeText={val => handleDireccionChange(idx, 'pais', val)}
+            style={styles.input}
+          />
           {direcciones.length > 1 && (
-            <TouchableOpacity onPress={() => removeDireccion(idx)} style={styles.eliminarBtn}>
+            <TouchableOpacity
+              onPress={() => removeDireccion(idx)}
+              style={styles.eliminarBtn}
+            >
               <Text style={styles.eliminarText}>Eliminar</Text>
             </TouchableOpacity>
           )}
@@ -83,27 +159,24 @@ const FormularioDirecciones: React.FC<{ onSuccess?: () => void; onCancel?: () =>
       <TouchableOpacity style={styles.guardarButton} onPress={handleSubmit}>
         <Text style={styles.guardarButtonText}>Guardar direcciones</Text>
       </TouchableOpacity>
-      {onCancel && (
-        <TouchableOpacity style={styles.cancelarButton} onPress={onCancel}>
-          <Text style={styles.cancelarButtonText}>Cancelar</Text>
-        </TouchableOpacity>
-      )}
+      <TouchableOpacity style={styles.cancelarButton} onPress={handleCancelar}>
+        <Text style={styles.cancelarButtonText}>Cancelar</Text>
+      </TouchableOpacity>
     </ScrollView>
-   </>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     padding: 16,
-    paddingBottom:100,
+    paddingBottom: 100,
     backgroundColor: "#f8f9fb",
   },
   title: {
     fontWeight: 'bold',
     fontSize: 24,
     marginBottom: 18,
-    marginTop:80,
+    marginTop: 80,
     color: '#2edbd1',
     textAlign: 'center',
   },
@@ -136,16 +209,6 @@ const styles = StyleSheet.create({
   eliminarBtn: {
     alignItems: 'flex-end',
     marginTop: 2,
-  },
-   iconoFlecha: {
-    position: 'absolute',
-    top: 50,
-    left: 18,
-    zIndex: 10,
-    padding: 8,
-    backgroundColor: '#f8f9fb',
-    borderRadius: 20,
-    elevation: 4,
   },
   eliminarText: {
     color: '#ff5252',

@@ -2,7 +2,7 @@ import { Usuario } from '@/types/usuario';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@react-navigation/elements';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { MotiView } from 'moti';
 import React, { useEffect, useState } from 'react';
 import { Modal, StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -32,7 +32,7 @@ export default function PantallaClientes() {
         queryClient.invalidateQueries({ queryKey: ['clientes-empresa'] });
       } catch (error) {
         alert("Error eliminando el usuario");
-        alert(error)
+        alert(error);
       }
     }
   };
@@ -55,11 +55,17 @@ export default function PantallaClientes() {
     enabled: !!user?.empresa_id,
   });
 
+  useFocusEffect(
+    React.useCallback(() => {
+      clientesQuery.refetch();
+    }, [clientesQuery])
+  );
+
   return (
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.iconoFlecha}
-        onPress={() => router.back()}
+        onPress={() => router.push('/clientes')}
         activeOpacity={0.8}
       >
         <Ionicons name="arrow-back" size={28} color="#2edbd1" />
@@ -97,24 +103,28 @@ export default function PantallaClientes() {
           pointerEvents={showMenu ? 'auto' : 'none'}
           onLayout={event => setMenuHeight(event.nativeEvent.layout.height)}
         >
-          <TouchableOpacity style={styles.menuButtonAniadir} onPress={() => {router.push('/clientes/formularioCliente')}}>
+          <TouchableOpacity
+            style={styles.menuButtonAniadir}
+            onPress={() => { router.push('/clientes/formularioCliente'); }}
+          >
             <Text style={styles.menuButtonText}>Añadir</Text>
           </TouchableOpacity>
           <TouchableOpacity
-  style={styles.menuButtonEditar}
-  onPress={() => setEditando(prev => !prev)}>
-  <Text style={styles.menuButtonText}>
-    {editando ? 'SALIR' : 'Editar'}
-  </Text>
-</TouchableOpacity>
+            style={styles.menuButtonEditar}
+            onPress={() => setEditando(prev => !prev)}
+          >
+            <Text style={styles.menuButtonText}>
+              {editando ? 'SALIR' : 'Editar'}
+            </Text>
+          </TouchableOpacity>
           <TouchableOpacity
-  style={styles.menuButtonEliminar}
-  onPress={() => setEliminando(prev => !prev)}
->
-  <Text style={styles.menuButtonText}>
-    {eliminando ? 'SALIR' : 'Eliminar'}
-  </Text>
-</TouchableOpacity>
+            style={styles.menuButtonEliminar}
+            onPress={() => setEliminando(prev => !prev)}
+          >
+            <Text style={styles.menuButtonText}>
+              {eliminando ? 'SALIR' : 'Eliminar'}
+            </Text>
+          </TouchableOpacity>
         </MotiView>
       )}
 
@@ -127,28 +137,27 @@ export default function PantallaClientes() {
         }}
         style={{ flex: 1 }}
       >
-      <ListaClientes
-  query={clientesQuery}
-  emptyMessage="No hay clientes para esta empresa."
-  eliminando={eliminando}
-  editando={editando} 
-  onSeleccionarCliente={cliente => {
-  if (eliminando) {
-    setClienteAEliminar(cliente);
-    setModalVisible(true);
-  } else if (editando) {
-    router.push({
-      pathname: '/clientes/pantallaClienteEditar',
-      params: { clienteEmail: cliente.email }
-    });
-    setEditando(false);
-  } else {
-    // Solo mostrar detalle
-    router.push({ pathname: '/clientes/[id]', params: { id: cliente.id } });
-  }
-}}
-/>
-
+        <ListaClientes
+          query={clientesQuery}
+          emptyMessage="No hay clientes para esta empresa."
+          eliminando={eliminando}
+          editando={editando}
+          onSeleccionarCliente={cliente => {
+            if (eliminando) {
+              setClienteAEliminar(cliente);
+              setModalVisible(true);
+            } else if (editando) {
+              router.push({
+                pathname: '/clientes/pantallaClienteEditar',
+                params: { clienteEmail: cliente.email }
+              });
+              setEditando(false);
+            } else {
+              // Solo mostrar detalle
+              router.push({ pathname: '/clientes/[id]', params: { id: cliente.id } });
+            }
+          }}
+        />
       </MotiView>
 
       {/* Modal de confirmación */}
@@ -217,7 +226,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     elevation: 4,
   },
-   iconoFlecha: {
+  iconoFlecha: {
     position: 'absolute',
     top: 50,
     left: 18,
