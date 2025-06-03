@@ -38,7 +38,7 @@ export default function DetalleClienteScreen() {
     <>
      <TouchableOpacity
         style={styles.iconoFlecha}
-        onPress={() => router.back()}
+        onPress={() => router.push('/autonomo')}
         activeOpacity={0.8}
       >
         <Ionicons name="arrow-back" size={28} color="#2edbd1" />

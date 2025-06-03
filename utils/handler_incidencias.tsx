@@ -12,6 +12,19 @@ export async function crearIncidencia(incidencia: any) {
   return res.data;
 }
 
+export async function finalizarIncidencia(
+  incidencia_id: number,
+  fecha_final: string,
+  horas: string
+): Promise<any> {
+  const res = await api.patch(`/incidencias/finalizar/${incidencia_id}`, {
+    fecha_final,
+    horas,
+  });
+  return res.data;
+}
+
+
 // 3. Obtener incidencia por ID
 export async function getIncidenciaPorId(id: number) {
   const res = await api.get(`/incidencias/${id}`);
@@ -99,10 +112,16 @@ export async function filtrarIncidencias({
 }
 
 // 12. Pausar una incidencia (pasa el id y el datetime de la pausa)
-export async function pausarIncidencia(incidencia_id: number, fecha_hora_pausa: string) {
-  const res = await api.patch(`/incidencias/pausar/${incidencia_id}`, { fecha_hora_pausa });
+export async function pausarIncidencia(
+  incidencia_id: number,
+  fecha_hora_pausa: string
+): Promise<any> {
+  const res = await api.patch(`/incidencias/pausar/${incidencia_id}`, {
+    fecha_hora_pausa,
+  });
   return res.data;
 }
+
 
 // 13. Reanudar una incidencia
 export async function reanudarIncidencia(incidencia_id: number) {

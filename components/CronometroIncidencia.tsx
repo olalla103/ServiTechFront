@@ -1,8 +1,8 @@
 import { useAuth } from '@/context/AuthProvider';
 import { actualizarIncidencia, pausarIncidencia, reanudarIncidencia } from '@/utils/handler_incidencias';
 import { useQueryClient } from '@tanstack/react-query';
-import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 type Props = {
   incidenciaId: number;
@@ -20,51 +20,60 @@ const CronometroIncidencia: React.FC<Props> = ({
 }) => {
   const [hasStarted, setHasStarted] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
-  const [seconds, setSeconds] = useState(segundosIniciales);
+  const [seconds, setSeconds] = useState(segundosIniciales ?? 0);
   const [loading, setLoading] = useState(false);
   const [finalizado, setFinalizado] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
 const refreshIncidencia = () => {
   queryClient.invalidateQueries({ queryKey: ['incidencia', incidenciaId] });
-
 };
 
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Control del cronómetro
+  // Este useEffect inicializa el estado según props
   useEffect(() => {
-    if (isRunning) {
-      intervalRef.current = setInterval(() => setSeconds((s) => s + 1), 1000);
-    } else if (intervalRef.current) {
-      clearInterval(intervalRef.current);
+    if (segundosIniciales && segundosIniciales > 0) {
+      setHasStarted(true);
+      setSeconds(segundosIniciales);
+      setIsRunning(!pausadaInicial);
+    } else {
+      setHasStarted(false);
+      setIsRunning(false);
+      setSeconds(0);
     }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [isRunning]);
+  }, [segundosIniciales, pausadaInicial]);
 
-  // INICIAR: actualiza el estado y fecha_inicio en backend
+  useEffect(() => {
+  let interval: any;
+  if (isRunning) {
+    interval = setInterval(() => setSeconds(s => s + 1), 1000);
+  }
+  return () => {
+    if (interval) clearInterval(interval);
+  };
+}, [isRunning]);
+
+
+  
+
   const handleIniciar = async () => {
     setLoading(true);
     try {
       await actualizarIncidencia(incidenciaId, {
-        estado: "en_reparacion",
-        fecha_inicio: new Date().toISOString().slice(0, 19).replace('T', ' ')
-      });
+  estado: 'en_reparacion',
+  fecha_inicio: new Date().toISOString().slice(0, 19).replace('T', ' '),
+});
       setHasStarted(true);
       setIsRunning(true);
       refreshIncidencia();
     } catch (e) {
-      // Aquí puedes mostrar un Toast o alerta si quieres
+      console.log(e);
     }
     setLoading(false);
   };
 
-  const { user } = useAuth();
-
-  // PAUSAR: pone en pausa la incidencia (backend y frontend)
   const handlePausar = async () => {
     setLoading(true);
     try {
@@ -72,11 +81,12 @@ const refreshIncidencia = () => {
       setIsRunning(false);
       onChangeEstado?.(true);
       refreshIncidencia();
-    } catch (e) {}
+    } catch (e) {
+      console.log(e);
+    }
     setLoading(false);
   };
 
-  // REANUDAR: reanuda la incidencia (backend y frontend)
   const handleReanudar = async () => {
     setLoading(true);
     try {
@@ -84,44 +94,38 @@ const refreshIncidencia = () => {
       setIsRunning(true);
       onChangeEstado?.(false);
       refreshIncidencia();
-    } catch (e) {}
+    } catch (e) {
+      console.log(e);
+    }
     setLoading(false);
   };
 
   function formatHoraMySQL(s: number) {
-  // Devuelve HH:MM:SS para guardar en la BD
-  const h = Math.floor(s / 3600).toString().padStart(2, '0');
-  const m = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
-  const ss = (s % 60).toString().padStart(2, '0');
-  return `${h}:${m}:${ss}`;
-}
+    const h = Math.floor(s / 3600).toString().padStart(2, '0');
+    const m = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
+    const ss = (s % 60).toString().padStart(2, '0');
+    return `${h}:${m}:${ss}`;
+  }
 
-  // PARAR: finaliza y muestra el modal
-const handleParar = async () => {
-  setIsRunning(false);
-  setFinalizado(true);
-  setModalVisible(true);
+  const handleParar = async () => {
+    setIsRunning(false);
+    setFinalizado(true);
+    setModalVisible(true);
 
-  // Marca la incidencia como resuelta en la BD
-  await actualizarIncidencia(incidenciaId, {
-    estado: "resuelta",
-    fecha_final: new Date().toISOString().slice(0, 19).replace('T', ' '),
-    horas: formatHoraMySQL(seconds) // si tienes que guardar el tiempo
-  });
+    await actualizarIncidencia(incidenciaId, {
+      estado: 'resuelta',
+      fecha_final: new Date().toISOString().slice(0, 19).replace('T', ' '),
+      horas: formatHoraMySQL(seconds),
+    });
 
-  // Refresca tanto el detalle de la incidencia como la lista de resueltas
-  queryClient.invalidateQueries({ queryKey: ['incidencia', incidenciaId] });
-  queryClient.invalidateQueries({ queryKey: ['incidencias-resueltas', user.id] }); // técnico actual
-};
-
-
-  // Cerrar modal
-  const handleCerrarModal = () => {
-    setModalVisible(false);
-    // Aquí podrías refrescar la pantalla o llamar a un callback
+    queryClient.invalidateQueries({ queryKey: ['incidencia', incidenciaId] });
+    queryClient.invalidateQueries({ queryKey: ['incidencias-resueltas', user.id] });
   };
 
-  // Formato HH:MM:SS
+  const handleCerrarModal = () => {
+    setModalVisible(false);
+  };
+
   const format = (s: number) => {
     const h = Math.floor(s / 3600).toString().padStart(2, '0');
     const m = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
@@ -135,30 +139,29 @@ const handleParar = async () => {
       {/* BOTONES */}
       {!finalizado && (
         <View style={styles.row}>
-  {loading && <ActivityIndicator color="#2edbd1" style={{ marginRight: 8 }} />}
-  {!hasStarted && !loading && (
-    <TouchableOpacity style={styles.btn} onPress={handleIniciar}>
-      <Text style={styles.btnText}>Iniciar</Text>
-    </TouchableOpacity>
-  )}
-  {hasStarted && !loading && (
-    <TouchableOpacity
-      style={[styles.btn, { opacity: finalizado ? 0.5 : 1 }]}
-      onPress={isRunning ? handlePausar : handleReanudar}
-      disabled={finalizado}
-    >
-      <Text style={styles.btnText}>{isRunning ? 'Pausar' : 'Reanudar'}</Text>
-    </TouchableOpacity>
-  )}
-  <TouchableOpacity
-    style={styles.btn}
-    onPress={handleParar}
-    disabled={loading || !hasStarted || finalizado}
-  >
-    <Text style={styles.btnText}>Parar</Text>
-  </TouchableOpacity>
-</View>
-
+          {!hasStarted && !loading && (
+            <TouchableOpacity style={styles.btn} onPress={handleIniciar}>
+              <Text style={styles.btnText}>Iniciar</Text>
+            </TouchableOpacity>
+          )}
+          {hasStarted && !isRunning && !loading && (
+            <TouchableOpacity style={styles.btn} onPress={handleReanudar}>
+              <Text style={styles.btnText}>Reanudar</Text>
+            </TouchableOpacity>
+          )}
+          {hasStarted && isRunning && !loading && (
+            <TouchableOpacity style={styles.btn} onPress={handlePausar}>
+              <Text style={styles.btnText}>Pausar</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            style={styles.btn}
+            onPress={handleParar}
+            disabled={loading || !hasStarted || finalizado}
+          >
+            <Text style={styles.btnText}>Parar</Text>
+          </TouchableOpacity>
+        </View>
       )}
       {/* ESTADO */}
       <Text style={{ marginTop: 6, color: finalizado ? "#27ae60" : isRunning ? "#27ae60" : "#888" }}>
@@ -210,7 +213,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.18)'
+    backgroundColor: 'rgba(0,0,0,0.18)',
   },
   modalBox: {
     backgroundColor: '#fff',
@@ -219,7 +222,7 @@ const styles = StyleSheet.create({
     minWidth: 250,
     maxWidth: 340,
     elevation: 8,
-    alignItems: 'center'
+    alignItems: 'center',
   },
   modalTitle: { fontWeight: 'bold', fontSize: 20, color: '#199', marginBottom: 10 },
   modalText: { fontSize: 16, marginBottom: 18, color: '#444' },
@@ -228,9 +231,9 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     paddingVertical: 9,
     paddingHorizontal: 32,
-    marginHorizontal: 5
+    marginHorizontal: 5,
   },
-  btnMiniText: { color: '#fff', fontWeight: 'bold', fontSize: 16 }
+  btnMiniText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
 });
 
 export default CronometroIncidencia;

@@ -1,23 +1,38 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CronometroIncidencia from '../../components/CronometroIncidencia'; // ajusta la ruta si es necesario
-import { Incidencia } from '../../types/incidencia';
 import { getIncidenciaPorId } from '../../utils/handler_incidencias';
 import { getUsuarioPorId } from '../../utils/handler_usuarios'; // Ajusta la ruta si es necesario
 
 export default function DetalleIncidenciaScreen() {
   const { id } = useLocalSearchParams();
   const incidenciaId = Number(id);
-
-  // 1. Primero busca la incidencia principal
-  const { data: incidencia, isLoading, error } = useQuery<Incidencia>({
+  const { refetch } = useQuery({
     queryKey: ['incidencia', incidenciaId],
     queryFn: () => getIncidenciaPorId(incidenciaId),
     enabled: !!id,
   });
+
+const refetchIncidencias = () => {
+  refetch();
+  console.log('refrescada')
+};
+
+  useFocusEffect(
+  React.useCallback(() => {
+    refetchIncidencias(); // tu función para refrescar
+  }, [])
+);
+
+
+ const { data: incidencia, isLoading, error } = useQuery({
+  queryKey: ['incidencia', incidenciaId],
+  queryFn: () => getIncidenciaPorId(incidenciaId),
+  enabled: !!incidenciaId, // O quítalo si siempre está definido
+});
 
   // 2. Obtén los datos del cliente y técnico, solo si ya tienes la incidencia
   const clienteId = incidencia?.cliente_id;
@@ -35,10 +50,18 @@ export default function DetalleIncidenciaScreen() {
     enabled: !!tecnicoId,
   });
 
-  function horasToSeconds(horas: string) {
-    const [h, m, s] = horas.split(':').map(Number);
-    return h * 3600 + m * 60 + s;
-  }
+// function horasToSeconds(horas?: string | null): number {
+//   if (!horas || typeof horas !== "string" || !horas.includes(":")) return 0;
+//   const [h, m, s] = horas.split(':').map(Number);
+//   return (h || 0) * 3600 + (m || 0) * 60 + (s || 0);
+// }
+
+function tiempoToSegundos(horasStr?: string) {
+  if (!horasStr) return 0;
+  const [h, m, s] = horasStr.split(':').map(Number);
+  return h * 3600 + m * 60 + s;
+}
+
 
   // 3. Returns condicionales DESPUÉS de los hooks
   if (isLoading) {
@@ -115,8 +138,8 @@ export default function DetalleIncidenciaScreen() {
             <Text style={styles.label}>⏱ Tiempo de trabajo</Text>
             <CronometroIncidencia
               incidenciaId={Number(incidencia.id ?? 0)}
-              pausadaInicial={incidencia.pausada}
-              segundosIniciales={incidencia.horas ? horasToSeconds(incidencia.horas) : 0}
+              pausadaInicial={incidencia ? incidencia.pausada : false}
+              segundosIniciales={incidencia ? tiempoToSegundos(incidencia.horas) : 0}
             />
           </View>
         ) : (
