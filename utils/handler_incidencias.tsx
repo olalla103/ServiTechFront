@@ -54,6 +54,7 @@ export async function getIncidenciasAutonomo(userId: number) {
 
 // 4. Actualizar una incidencia
 export async function actualizarIncidencia(id: number, datos: any) {
+  console.log('Datos enviados para update:', datos);
   const res = await api.put(`/incidencias/${id}`, datos);
   return res.data;
 }
