@@ -138,8 +138,6 @@ function tiempoToSegundos(horasStr?: string) {
             <Text style={styles.label}>⏱ Tiempo de trabajo</Text>
             <CronometroIncidencia
               incidenciaId={Number(incidencia.id ?? 0)}
-              pausadaInicial={incidencia ? incidencia.pausada : false}
-              segundosIniciales={incidencia ? tiempoToSegundos(incidencia.horas) : 0}
             />
           </View>
         ) : (

@@ -48,7 +48,7 @@ export default function PantallaIncidencias() {
         Lista de incidencias, pulse en una para obtener más información sobre ella.
       </Text>
       <ListaIncidencias title="Pendientes de asignación" query={pendientesQuery} />
-      <ListaIncidencias title="En curso" query={enReparacionQuery} />
+      <ListaIncidencias title="En reparación" query={enReparacionQuery} />
       <ListaIncidencias title="Últimas finalizadas" query={resueltasQuery} />
     </ScrollView>
     </>

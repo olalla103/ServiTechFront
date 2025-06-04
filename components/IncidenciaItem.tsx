@@ -5,7 +5,6 @@ import { Incidencia } from '../types/incidencia';
 
 export default function IncidenciaItem({ incidencia }: { incidencia: Incidencia }) {
   const router = useRouter();
-  console.log("IncidenciaItem, id:", incidencia.id);
 
   return (
       <TouchableOpacity

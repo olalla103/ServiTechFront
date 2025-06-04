@@ -1,99 +1,109 @@
 import { useAuth } from '@/context/AuthProvider';
-import { actualizarIncidencia, pausarIncidencia, reanudarIncidencia } from '@/utils/handler_incidencias';
+import {
+  actualizarIncidencia,
+  getIncidenciaPorId,
+  pausarIncidencia,
+  reanudarIncidencia,
+} from '@/utils/handler_incidencias';
 import { useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useState } from 'react';
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 type Props = {
   incidenciaId: number;
-  pausadaInicial?: boolean;
-  segundosIniciales?: number;
   onChangeEstado?: (pausada: boolean) => void;
 };
 
-
 const CronometroIncidencia: React.FC<Props> = ({
   incidenciaId,
-  pausadaInicial = false,
-  segundosIniciales = 0,
-  onChangeEstado
+  onChangeEstado,
 }) => {
-  const [hasStarted, setHasStarted] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
-  const [seconds, setSeconds] = useState(segundosIniciales ?? 0);
+  const [seconds, setSeconds] = useState(0);
   const [loading, setLoading] = useState(false);
   const [finalizado, setFinalizado] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [iniciado, setIniciado] = useState(false); // Nuevo estado para saber si alguna vez se inició
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-const refreshIncidencia = () => {
-  queryClient.invalidateQueries({ queryKey: ['incidencia', incidenciaId] });
-};
-
-
-  // Este useEffect inicializa el estado según props
-  useEffect(() => {
-    if (segundosIniciales && segundosIniciales > 0) {
-      setHasStarted(true);
-      setSeconds(segundosIniciales);
-      setIsRunning(!pausadaInicial);
-    } else {
-      setHasStarted(false);
-      setIsRunning(false);
-      setSeconds(0);
-    }
-  }, [segundosIniciales, pausadaInicial]);
-
-  useEffect(() => {
-  let interval: any;
-  if (isRunning) {
-    interval = setInterval(() => setSeconds(s => s + 1), 1000);
+  // Conversión de "HH:MM:SS" a segundos
+  function horasToSeconds(horas: string | null) {
+    if (!horas) return 0;
+    const [h, m, s] = horas.split(':').map(Number);
+    return h * 3600 + m * 60 + s;
   }
-  return () => {
-    if (interval) clearInterval(interval);
+
+  // Refresca la incidencia y actualiza el cronómetro
+  const refreshIncidencia = async () => {
+    const nueva = await getIncidenciaPorId(incidenciaId);
+    const secs = horasToSeconds(nueva.horas);
+    setSeconds(secs); // Solo actualiza con el valor real
+    setIsRunning(nueva.estado === 'en_reparacion' && !nueva.pausada);
+    setFinalizado(nueva.estado === 'resuelta');
+    setIniciado(secs > 0 || (nueva.estado === 'en_reparacion' && !nueva.pausada));
   };
-}, [isRunning]);
 
+  useEffect(() => {
+    refreshIncidencia();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | undefined;
+    if (isRunning) {
+      interval = setInterval(() => setSeconds((s) => s + 1), 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isRunning]);
 
   const handleIniciar = async () => {
     setLoading(true);
     try {
       await actualizarIncidencia(incidenciaId, {
-  estado: 'en_reparacion',
-  fecha_inicio: new Date().toISOString().slice(0, 19).replace('T', ' '),
-});
-      setHasStarted(true);
-      setIsRunning(true);
-      refreshIncidencia();
+        estado: 'en_reparacion',
+        fecha_inicio: new Date().toISOString().slice(0, 19).replace('T', ' '),
+        horas: '00:00:00'
+      });
+      await queryClient.invalidateQueries({ queryKey: ['incidencia', incidenciaId] });
+      setSeconds(0);         // Reinicia contador SOLO al iniciar
+      setIsRunning(true);    // ¡Arranca el cronómetro!
+      setFinalizado(false);  // Por si se usó parar antes
+      setIniciado(true);     // Marca como iniciado
     } catch (e) {
       console.log(e);
     }
     setLoading(false);
   };
 
-  const handlePausar = async () => {
-    setLoading(true);
-    try {
-      await pausarIncidencia(incidenciaId, new Date().toISOString());
-      setIsRunning(false);
-      onChangeEstado?.(true);
-      refreshIncidencia();
-    } catch (e) {
-      console.log(e);
-    }
-    setLoading(false);
-  };
+  
+const handlePausar = async () => {
+  setLoading(true);
+  try {
+    await pausarIncidencia(incidenciaId, new Date().toISOString());
+    const nueva = await getIncidenciaPorId(incidenciaId);
+    const nuevosSegundos = horasToSeconds(nueva.horas);
+    // Si el backend devuelve 0, mantenemos el valor anterior
+    setSeconds(nuevosSegundos === 0 ? seconds : nuevosSegundos);
+    setIsRunning(false);
+    setFinalizado(false);
+    setIniciado(true); // Sigue marcado como iniciado
+    onChangeEstado?.(true);
+  } catch (e) {
+    console.log(e);
+  }
+  setLoading(false);
+};
 
   const handleReanudar = async () => {
     setLoading(true);
     try {
       await reanudarIncidencia(incidenciaId);
-      setIsRunning(true);
+      await refreshIncidencia();
+      setIniciado(true); // Sigue marcado como iniciado
       onChangeEstado?.(false);
-      refreshIncidencia();
     } catch (e) {
       console.log(e);
     }
@@ -101,8 +111,12 @@ const refreshIncidencia = () => {
   };
 
   function formatHoraMySQL(s: number) {
-    const h = Math.floor(s / 3600).toString().padStart(2, '0');
-    const m = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
+    const h = Math.floor(s / 3600)
+      .toString()
+      .padStart(2, '0');
+    const m = Math.floor((s % 3600) / 60)
+      .toString()
+      .padStart(2, '0');
     const ss = (s % 60).toString().padStart(2, '0');
     return `${h}:${m}:${ss}`;
   }
@@ -127,8 +141,12 @@ const refreshIncidencia = () => {
   };
 
   const format = (s: number) => {
-    const h = Math.floor(s / 3600).toString().padStart(2, '0');
-    const m = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
+    const h = Math.floor(s / 3600)
+      .toString()
+      .padStart(2, '0');
+    const m = Math.floor((s % 3600) / 60)
+      .toString()
+      .padStart(2, '0');
     const ss = (s % 60).toString().padStart(2, '0');
     return `${h}:${m}:${ss}`;
   };
@@ -136,62 +154,52 @@ const refreshIncidencia = () => {
   return (
     <View style={styles.wrapper}>
       <Text style={styles.timer}>{format(seconds)}</Text>
-      {/* BOTONES */}
-      {!finalizado && (
-        <View style={styles.row}>
-          {!hasStarted && !loading && (
-            <TouchableOpacity style={styles.btn} onPress={handleIniciar}>
-              <Text style={styles.btnText}>Iniciar</Text>
-            </TouchableOpacity>
-          )}
-          {hasStarted && !isRunning && !loading && (
-            <TouchableOpacity style={styles.btn} onPress={handleReanudar}>
-              <Text style={styles.btnText}>Reanudar</Text>
-            </TouchableOpacity>
-          )}
-          {hasStarted && isRunning && !loading && (
-            <TouchableOpacity style={styles.btn} onPress={handlePausar}>
-              <Text style={styles.btnText}>Pausar</Text>
-            </TouchableOpacity>
-          )}
+      <View style={styles.row}>
+        {/* Botón INICIAR solo si aún no ha empezado */}
+        {!isRunning && !finalizado && !iniciado && (
+          <TouchableOpacity style={styles.btn} onPress={handleIniciar} disabled={loading}>
+            <Text style={styles.btnText}>Iniciar</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Botón REANUDAR si ya se inició pero está pausado */}
+        {!isRunning && !finalizado && iniciado && (
+          <TouchableOpacity style={styles.btn} onPress={handleReanudar} disabled={loading}>
+            <Text style={styles.btnText}>Reanudar</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Botón PAUSAR si está corriendo */}
+        {isRunning && !finalizado && (
+          <TouchableOpacity style={styles.btn} onPress={handlePausar} disabled={loading}>
+            <Text style={styles.btnText}>Pausar</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Botón PARAR siempre visible salvo si ya está finalizado */}
+        {!finalizado && (
           <TouchableOpacity
             style={styles.btn}
             onPress={handleParar}
-            disabled={loading || !hasStarted || finalizado}
+            disabled={loading || seconds === 0}
           >
             <Text style={styles.btnText}>Parar</Text>
           </TouchableOpacity>
-        </View>
-      )}
-      {/* ESTADO */}
+        )}
+      </View>
+
+      {/* ESTADO DEL CRONÓMETRO */}
       <Text style={{ marginTop: 6, color: finalizado ? "#27ae60" : isRunning ? "#27ae60" : "#888" }}>
         {finalizado
           ? 'Incidencia finalizada'
           : isRunning
           ? 'En curso'
-          : hasStarted
+          : iniciado
           ? 'Pausado'
-          : ''}
+          : 'Sin iniciar'}
       </Text>
-      {/* MODAL FINALIZACIÓN */}
-      <Modal
-        transparent
-        visible={modalVisible}
-        animationType="fade"
-        onRequestClose={handleCerrarModal}
-      >
-        <View style={styles.modalBG}>
-          <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>¡Incidencia finalizada!</Text>
-            <Text style={styles.modalText}>
-              Tiempo total: <Text style={{ fontWeight: 'bold', color: '#2edbd1' }}>{format(seconds)}</Text>
-            </Text>
-            <TouchableOpacity style={styles.btnMini} onPress={handleCerrarModal}>
-              <Text style={styles.btnMiniText}>Hecho</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+
+      {/* Aquí puedes añadir el modal y el resto si lo necesitas */}
     </View>
   );
 };
