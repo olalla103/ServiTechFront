@@ -1,7 +1,7 @@
 import { Direccion } from '@/types/direccion';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useNavigation } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Usuario } from '../../types/usuario';
@@ -13,6 +13,7 @@ export default function DetalleClienteScreen() {
   const { id } = useLocalSearchParams();
   const clienteId = typeof id === "string" ? parseInt(id, 10) : Number(id); // Convertir a int
   const [showDirecciones, setShowDirecciones] = useState(false);
+  const navigation = useNavigation();
 
 
   const { data: cliente, isLoading, error } = useQuery<Usuario>({
@@ -37,12 +38,12 @@ export default function DetalleClienteScreen() {
   return (
     <>
      <TouchableOpacity
-        style={styles.iconoFlecha}
-        onPress={() => router.push('/autonomo')}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="arrow-back" size={28} color="#2edbd1" />
-      </TouchableOpacity>
+            style={styles.iconoFlecha}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="arrow-back" size={28} color="#2edbd1" />
+          </TouchableOpacity>
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>
         {cliente.nombre} {cliente.apellido1}{cliente.apellido2 ? ` ${cliente.apellido2}` : ''}

@@ -7,7 +7,7 @@ import {
 } from '@/utils/handler_incidencias';
 import { useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 type Props = {
   incidenciaId: number;
@@ -35,14 +35,15 @@ const CronometroIncidencia: React.FC<Props> = ({
   }
 
   // Refresca la incidencia y actualiza el cronómetro
-  const refreshIncidencia = async () => {
-    const nueva = await getIncidenciaPorId(incidenciaId);
-    const secs = horasToSeconds(nueva.horas);
-    setSeconds(secs); // Solo actualiza con el valor real
-    setIsRunning(nueva.estado === 'en_reparacion' && !nueva.pausada);
-    setFinalizado(nueva.estado === 'resuelta');
-    setIniciado(secs > 0 || (nueva.estado === 'en_reparacion' && !nueva.pausada));
-  };
+const refreshIncidencia = async () => {
+  const nueva = await getIncidenciaPorId(incidenciaId);
+  const secs = horasToSeconds(nueva.horas); // Esto siempre lo tienes que poner
+  setSeconds(secs); // <-- aquí SIEMPRE refresca con el tiempo del back
+  setIsRunning(nueva.estado === 'en_reparacion' && !nueva.pausada);
+  setFinalizado(nueva.estado === 'resuelta');
+  setIniciado(secs > 0 || (nueva.estado === 'en_reparacion' && !nueva.pausada));
+};
+
 
   useEffect(() => {
     refreshIncidencia();
@@ -83,10 +84,11 @@ const handlePausar = async () => {
   setLoading(true);
   try {
     await pausarIncidencia(incidenciaId, new Date().toISOString());
+    await refreshIncidencia();
     const nueva = await getIncidenciaPorId(incidenciaId);
     const nuevosSegundos = horasToSeconds(nueva.horas);
     // Si el backend devuelve 0, mantenemos el valor anterior
-    setSeconds(nuevosSegundos === 0 ? seconds : nuevosSegundos);
+    setSeconds(nuevosSegundos);
     setIsRunning(false);
     setFinalizado(false);
     setIniciado(true); // Sigue marcado como iniciado
@@ -97,18 +99,19 @@ const handlePausar = async () => {
   setLoading(false);
 };
 
-  const handleReanudar = async () => {
-    setLoading(true);
-    try {
-      await reanudarIncidencia(incidenciaId);
-      await refreshIncidencia();
-      setIniciado(true); // Sigue marcado como iniciado
-      onChangeEstado?.(false);
-    } catch (e) {
-      console.log(e);
-    }
-    setLoading(false);
-  };
+const handleReanudar = async () => {
+  setLoading(true);
+  try {
+    await reanudarIncidencia(incidenciaId);
+    await refreshIncidencia(); // <-- Aquí recuperas el tiempo acumulado
+    setIniciado(true);
+    onChangeEstado?.(false);
+  } catch (e) {
+    console.log(e);
+  }
+  setLoading(false);
+};
+
 
   function formatHoraMySQL(s: number) {
     const h = Math.floor(s / 3600)
@@ -179,12 +182,13 @@ const handlePausar = async () => {
         {/* Botón PARAR siempre visible salvo si ya está finalizado */}
         {!finalizado && (
           <TouchableOpacity
-            style={styles.btn}
-            onPress={handleParar}
-            disabled={loading || seconds === 0}
-          >
-            <Text style={styles.btnText}>Parar</Text>
-          </TouchableOpacity>
+  style={styles.btn}
+  onPress={() => setModalVisible(true)}
+  disabled={loading || seconds === 0}
+>
+  <Text style={styles.btnText}>Parar</Text>
+</TouchableOpacity>
+
         )}
       </View>
 
@@ -199,7 +203,37 @@ const handlePausar = async () => {
           : 'Sin iniciar'}
       </Text>
 
-      {/* Aquí puedes añadir el modal y el resto si lo necesitas */}
+      <Modal
+  visible={modalVisible}
+  transparent
+  animationType="fade"
+  onRequestClose={() => setModalVisible(false)}
+>
+  <View style={styles.modalBG}>
+    <View style={styles.modalBox}>
+      <Text style={styles.modalTitle}>¿Parar incidencia?</Text>
+      <Text style={styles.modalText}>¿Seguro que quieres parar la incidencia? No podrás reanudarla después.</Text>
+      <View style={{ flexDirection: 'row', gap: 14 }}>
+        <TouchableOpacity
+          style={styles.btnMini}
+          onPress={() => setModalVisible(false)}
+        >
+          <Text style={styles.btnMiniText}>Cancelar</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.btnMini, { backgroundColor: '#e9445a' }]}
+          onPress={async () => {
+            setModalVisible(false);
+            await handleParar(); // Aquí tu función de parar
+          }}
+        >
+          <Text style={styles.btnMiniText}>Parar</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+</Modal>
+
     </View>
   );
 };

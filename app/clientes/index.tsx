@@ -2,7 +2,7 @@ import { Usuario } from '@/types/usuario';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@react-navigation/elements';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useNavigation } from 'expo-router';
 import { MotiView } from 'moti';
 import React, { useEffect, useState } from 'react';
 import { Modal, StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -19,6 +19,7 @@ export default function PantallaClientes() {
   const [clienteAEliminar, setClienteAEliminar] = useState<Usuario | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [editando, setEditando] = useState(false);
+  const navigation = useNavigation();
 
   const queryClient = useQueryClient();
 
@@ -64,13 +65,14 @@ export default function PantallaClientes() {
   return (
     <View style={styles.container}>
       <TouchableOpacity
-        style={styles.iconoFlecha}
-        onPress={() => router.push('/clientes')}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="arrow-back" size={28} color="#2edbd1" />
-      </TouchableOpacity>
-
+       style={styles.iconoFlecha}
+       onPress={() => navigation.goBack()}
+       activeOpacity={0.8}
+     >
+       <Ionicons name="arrow-back" size={28} color="#2edbd1" />
+     </TouchableOpacity>
+      <Text style={styles.headerIncidencias}>Clientes</Text>
+    <Text style={styles.subHeader}>Pulsa en un cliente para ver más opciones</Text>
       <TouchableOpacity
         style={styles.gearIcon}
         onPress={() => setShowMenu(prev => !prev)}
@@ -78,10 +80,8 @@ export default function PantallaClientes() {
       >
         <Ionicons name="settings-sharp" size={28} color="#2edbd1" />
       </TouchableOpacity>
-
-      <Text style={styles.headerIncidencias}>
-        Lista de clientes, pulse en el cliente para obtener más información
-      </Text>
+      <View style={styles.card}>
+    
 
       {/* Menú animado de botones */}
       {shouldRenderMenu && (
@@ -197,6 +197,7 @@ export default function PantallaClientes() {
           </View>
         </View>
       </Modal>
+      </View>
     </View>
   );
 }
@@ -204,17 +205,37 @@ export default function PantallaClientes() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fb',
-    paddingTop: 130,
-    paddingHorizontal: 20,
+    backgroundColor: '#f8fafc', // gris suave uniforme
+    paddingTop: 90,
+    alignItems: 'center',
+  },
+  card: {
+    flex: 1,
+    backgroundColor: '#f8fafc', // ¡el mismo gris!
+    borderRadius: 0,             // sin bordes redondeados
+    marginTop: 0,
+    paddingTop: 18,
+    paddingBottom: 4,
+    paddingHorizontal: 16,
+    shadowColor: 'transparent',  // sin sombra
+    elevation: 0,
+    alignItems: 'center',
   },
   headerIncidencias: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#2edbd1',
-    marginBottom: 25,
-    marginTop: 0,
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#1bcfc5',
+    marginBottom: 2,
+    letterSpacing: 0.5,
     textAlign: 'center',
+    marginTop: 10,
+  },
+  subHeader: {
+    fontSize: 15,
+    color: '#7bd9d5',
+    marginBottom: 18,
+    textAlign: 'center',
+    fontWeight: '600',
   },
   gearIcon: {
     position: 'absolute',
@@ -222,7 +243,7 @@ const styles = StyleSheet.create({
     right: 18,
     zIndex: 10,
     padding: 8,
-    backgroundColor: '#f8f9fb',
+    backgroundColor: '#f8fafc', // igual al fondo
     borderRadius: 20,
     elevation: 4,
   },
@@ -232,7 +253,7 @@ const styles = StyleSheet.create({
     left: 18,
     zIndex: 10,
     padding: 8,
-    backgroundColor: '#fff',
+    backgroundColor: '#fff', // si prefieres, ponle gris también
     borderRadius: 20,
     elevation: 4,
   },
@@ -240,6 +261,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 12,
+    marginBottom: 8,
+    marginTop: 10,
   },
   menuButtonAniadir: {
     backgroundColor: '#B1CFB7',
@@ -284,6 +307,7 @@ const styles = StyleSheet.create({
   },
 });
 
+
 const modalStyles = StyleSheet.create({
   centeredView: {
     flex: 1,
@@ -316,12 +340,13 @@ const modalStyles = StyleSheet.create({
     marginRight: 10
   },
   buttonEliminar: {
-    backgroundColor: '#EFBA93',
-    borderRadius: 8,
-    padding: 10,
-  },
-  textStyle: {
-    fontWeight: 'bold',
-    color: '#222'
-  },
+  backgroundColor: '#e9445a',
+  borderRadius: 8,
+  padding: 10,
+  elevation: 2,
+},
+textStyle: {
+  fontWeight: 'bold',
+  color: '#fff'
+},
 });

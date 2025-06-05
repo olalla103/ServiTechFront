@@ -42,12 +42,16 @@ const styles = StyleSheet.create({
     shadowColor: '#0002',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.09,
+    width:'100%',
+    paddingHorizontal:40,
+    alignSelf:'stretch',
     shadowRadius: 4,
     elevation: 2,
   },
-  nombre: {
-    fontWeight: 'bold',
-    fontSize: 16,
+nombre: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#333',
     marginBottom: 2,
   },
   direccion: {

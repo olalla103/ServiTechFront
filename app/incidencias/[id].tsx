@@ -103,10 +103,18 @@ function tiempoToSegundos(horasStr?: string) {
         </View>
 
         <View style={styles.cardRow}>
-          <View style={{ flex: 1 }}>
+            <View style={{ flex: 1 }}>
             <Text style={styles.label}>⏱ Estado</Text>
-            <Text style={styles.value}>{incidencia.estado}</Text>
-          </View>
+            <Text style={styles.value}>
+              {incidencia.estado === 'pendiente'
+              ? 'Pendiente'
+              : incidencia.estado === 'en_reparacion'
+              ? 'En reparación'
+              : incidencia.estado === 'resuelta'
+              ? 'Resuelta'
+              : incidencia.estado}
+            </Text>
+            </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.label}>🗓️ Fecha reporte</Text>
             <Text style={styles.value}>{new Date(incidencia.fecha_reporte).toLocaleDateString()}</Text>

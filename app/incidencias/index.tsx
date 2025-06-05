@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
-import { router } from 'expo-router';
+import { useFocusEffect, useNavigation } from 'expo-router';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ListaIncidencias from '../../components/ListaIncidencias';
 import { useAuth } from '../../context/AuthProvider';
 import {
@@ -12,9 +12,19 @@ import {
 } from '../../utils/handler_incidencias';
 
 export default function PantallaIncidencias() {
+  const navigation = useNavigation();
+
+    useFocusEffect(
+    React.useCallback(() => {
+      enReparacionQuery.refetch();
+      pendientesQuery.refetch();
+      resueltasQuery.refetch();
+    }, [])
+  );
+  
   const { user } = useAuth();
   console.log("CARGANDO /incidencias/index.tsx");
-  
+
   const enReparacionQuery = useQuery({
     queryKey: ['incidencias-en-reparacion', user?.id],
     queryFn: () => getIncidenciasEnReparacionPorTecnico(user.id),
@@ -36,43 +46,73 @@ export default function PantallaIncidencias() {
 
   return (
     <>
-    <TouchableOpacity
-       style={styles.iconoFlecha}
-       onPress={() => router.push('/autonomo')}
-       activeOpacity={0.8}
-     >
-       <Ionicons name="arrow-back" size={28} color="#2edbd1" />
-     </TouchableOpacity>
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-      <Text style={styles.headerIncidencias}>
-        Lista de incidencias, pulse en una para obtener más información sobre ella.
-      </Text>
-      <ListaIncidencias title="Pendientes de asignación" query={pendientesQuery} />
-      <ListaIncidencias title="En reparación" query={enReparacionQuery} />
-      <ListaIncidencias title="Últimas finalizadas" query={resueltasQuery} />
-    </ScrollView>
-    </>
+  <TouchableOpacity
+  style={styles.iconoFlecha}
+  onPress={() => navigation.goBack()}
+  activeOpacity={0.8}
+>
+  <Ionicons name="arrow-back" size={28} color="#2edbd1" />
+</TouchableOpacity>
+
+
+  <View style={styles.fondoApp}>
+    <Text style={styles.headerIncidencias}>
+      Incidencias
+    </Text>
+    <Text style={styles.subHeader}>
+      Pulsa una incidencia para ver su detalle.
+    </Text>
+    <View style={styles.card}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 32,paddingHorizontal: 10 }}>
+        <ListaIncidencias title="Pendientes de asignación" query={pendientesQuery} />
+        <ListaIncidencias title="En reparación" query={enReparacionQuery} />
+        <ListaIncidencias title="Últimas finalizadas" query={resueltasQuery} />
+      </ScrollView>
+    </View>
+  </View>
+</>
+
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  fondoApp: {
     flex: 1,
-    backgroundColor: '#f8f9fb',
-    paddingTop: 100,
-    paddingHorizontal: 18,
+    backgroundColor: '#f8fafc',
+    paddingTop: 90,
+    // alignItems: 'center', // ¡Quita esto!
+    paddingHorizontal: 0,    // Mejor, padding fuera del card
   },
   headerIncidencias: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#2edbd1',
-    marginBottom: 18,
-    marginTop: 4,
+    fontSize: 30,
+    fontWeight: '900',
+    color: '#1bcfc5',
+    marginBottom: 2,
+    letterSpacing: 0.5,
     textAlign: 'center',
+    marginTop: 10,
   },
-   iconoFlecha: {
+  subHeader: {
+    fontSize: 15,
+    color: '#7bd9d5',
+    marginBottom: 18,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  card: {
+    flex: 1,
+    width: '100%',
+    backgroundColor: '#f8fafc', // igual que el fondo, para look plano
+    borderRadius: 0,            // sin borde, para que todo sea plano
+    paddingTop: 0,
+    paddingBottom: 0,
+    paddingHorizontal: 0,
+    shadowColor: 'transparent', // sin sombra, plano
+    elevation: 0,
+  },
+  iconoFlecha: {
     position: 'absolute',
-    top: 50,
+    top: 54,
     left: 18,
     zIndex: 10,
     padding: 8,

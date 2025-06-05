@@ -124,7 +124,6 @@ export async function pausarIncidencia(
   return res.data;
 }
 
-
 // 13. Reanudar una incidencia
 export async function reanudarIncidencia(incidencia_id: number) {
   const res = await api.patch(`/incidencias/reanudar/${incidencia_id}`);
