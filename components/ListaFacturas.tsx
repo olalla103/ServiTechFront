@@ -53,7 +53,6 @@ export default function ListaFacturas({
           )
         }
         keyExtractor={item => String(item.numero_factura)}
-        scrollEnabled={false}
         ListEmptyComponent={
           <Text style={{ color: '#aaa', fontStyle: 'italic', textAlign: 'center' }}>
             {emptyMessage || 'No hay facturas'}

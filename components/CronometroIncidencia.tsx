@@ -12,11 +12,14 @@ import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 type Props = {
   incidenciaId: number;
   onChangeEstado?: (pausada: boolean) => void;
+  setCronometroIniciado?: (v:boolean) => void;
+
 };
 
 const CronometroIncidencia: React.FC<Props> = ({
   incidenciaId,
   onChangeEstado,
+  setCronometroIniciado, 
 }) => {
   const [isRunning, setIsRunning] = useState(false);
   const [seconds, setSeconds] = useState(0);
@@ -70,6 +73,7 @@ const CronometroIncidencia: React.FC<Props> = ({
       setIsRunning(true);
       setFinalizado(false);
       setIniciado(true);
+      setCronometroIniciado?.(true);
     } catch (e) {
       console.log(e);
     }
@@ -87,6 +91,7 @@ const CronometroIncidencia: React.FC<Props> = ({
       setIsRunning(false);
       setFinalizado(false);
       setIniciado(true);
+      setCronometroIniciado?.(false);
       onChangeEstado?.(true);
     } catch (e) {
       console.log(e);
@@ -101,6 +106,7 @@ const CronometroIncidencia: React.FC<Props> = ({
       await refreshIncidencia();
       setIniciado(true);
       onChangeEstado?.(false);
+      setCronometroIniciado?.(true);
     } catch (e) {
       console.log(e);
     }
@@ -124,6 +130,7 @@ const CronometroIncidencia: React.FC<Props> = ({
     });
     queryClient.invalidateQueries({ queryKey: ['incidencia', incidenciaId] });
     queryClient.invalidateQueries({ queryKey: ['incidencias-resueltas', user.id] });
+    setCronometroIniciado?.(false);
 
     
     

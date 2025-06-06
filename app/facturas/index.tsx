@@ -77,6 +77,7 @@ export default function PantallaFacturas() {
       </TouchableOpacity>
       <View style={styles.card}>
         {/* Menú animado */}
+        
         {shouldRenderMenu && (
           <MotiView
             from={{ opacity: 0, scale: 0.95 }}
@@ -120,7 +121,7 @@ export default function PantallaFacturas() {
             </TouchableOpacity>
           </MotiView>
         )}
-
+     
         {/* Lista animada */}
         <MotiView
           animate={{ marginTop: showMenu ? menuHeight : 25 }}
@@ -152,6 +153,7 @@ export default function PantallaFacturas() {
             }}
           />
         </MotiView>
+        
 
         {/* Modal de confirmación */}
         <Modal

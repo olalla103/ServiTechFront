@@ -1,43 +1,49 @@
-import { useAuth } from '@/context/AuthProvider';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import CronometroIncidencia from '../../components/CronometroIncidencia'; // ajusta la ruta si es necesario
-import { getIncidenciaPorId } from '../../utils/handler_incidencias';
-import { getUsuarioPorId } from '../../utils/handler_usuarios'; // Ajusta la ruta si es necesario
+import { ActivityIndicator, BackHandler, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import CronometroIncidencia from '../../components/CronometroIncidencia';
+import { actualizarIncidencia, getIncidenciaPorId } from '../../utils/handler_incidencias';
+import { getUsuarioPorId } from '../../utils/handler_usuarios';
 
 export default function DetalleIncidenciaScreen() {
   const { id } = useLocalSearchParams();
   const incidenciaId = Number(id);
-  const { refetch } = useQuery({
+
+  const [mostrarModalSalida, setMostrarModalSalida] = useState(false);
+  const [cronometroIniciado, setCronometroIniciado] = useState(false);
+
+  // 1. Obtener la incidencia
+  const { data: incidencia, isLoading, error, refetch } = useQuery({
     queryKey: ['incidencia', incidenciaId],
     queryFn: () => getIncidenciaPorId(incidenciaId),
-    enabled: !!id,
+    enabled: !!incidenciaId,
   });
 
-const refetchIncidencias = () => {
-  refetch();
-  console.log('refrescada')
-};
-
+  // 2. Interceptar hardware back solo si el cronómetro está iniciado en esta sesión
   useFocusEffect(
-  React.useCallback(() => {
-    refetchIncidencias(); // tu función para refrescar
-  }, [])
-);
+    React.useCallback(() => {
+      if (!cronometroIniciado) return;
+      const onBackPress = () => {
+        setMostrarModalSalida(true);
+        return true;
+      };
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [cronometroIniciado])
+  );
 
- const { user } = useAuth();
-const [mostrarFormularioFactura, setMostrarFormularioFactura] = useState(false);
+  // 3. Para la flecha: solo modal si cronómetroIniciado
+  const handleFlecha = () => {
+    if (cronometroIniciado) {
+      setMostrarModalSalida(true);
+    } else {
+      router.back();
+    }
+  };
 
- const { data: incidencia, isLoading, error } = useQuery({
-  queryKey: ['incidencia', incidenciaId],
-  queryFn: () => getIncidenciaPorId(incidenciaId),
-  enabled: !!incidenciaId, // O quítalo si siempre está definido
-});
-
-  // 2. Obtén los datos del cliente y técnico, solo si ya tienes la incidencia
+  // 4. Otros datos (cliente y técnico)
   const clienteId = incidencia?.cliente_id;
   const tecnicoId = incidencia?.tecnico_id;
 
@@ -53,20 +59,6 @@ const [mostrarFormularioFactura, setMostrarFormularioFactura] = useState(false);
     enabled: !!tecnicoId,
   });
 
-// function horasToSeconds(horas?: string | null): number {
-//   if (!horas || typeof horas !== "string" || !horas.includes(":")) return 0;
-//   const [h, m, s] = horas.split(':').map(Number);
-//   return (h || 0) * 3600 + (m || 0) * 60 + (s || 0);
-// }
-
-function tiempoToSegundos(horasStr?: string) {
-  if (!horasStr) return 0;
-  const [h, m, s] = horasStr.split(':').map(Number);
-  return h * 3600 + m * 60 + s;
-}
-
-
-  // 3. Returns condicionales DESPUÉS de los hooks
   if (isLoading) {
     return (
       <View style={styles.centered}>
@@ -87,7 +79,7 @@ function tiempoToSegundos(horasStr?: string) {
     <>
       <TouchableOpacity
         style={styles.iconoFlecha}
-        onPress={() => router.back()}
+        onPress={handleFlecha}
         activeOpacity={0.8}
       >
         <Ionicons name="arrow-back" size={28} color="#2edbd1" />
@@ -106,18 +98,18 @@ function tiempoToSegundos(horasStr?: string) {
         </View>
 
         <View style={styles.cardRow}>
-            <View style={{ flex: 1 }}>
+          <View style={{ flex: 1 }}>
             <Text style={styles.label}>⏱ Estado</Text>
             <Text style={styles.value}>
               {incidencia.estado === 'pendiente'
-              ? 'Pendiente'
-              : incidencia.estado === 'en_reparacion'
-              ? 'En reparación'
-              : incidencia.estado === 'resuelta'
-              ? 'Resuelta'
-              : incidencia.estado}
+                ? 'Pendiente'
+                : incidencia.estado === 'en_reparacion'
+                ? 'En reparación'
+                : incidencia.estado === 'resuelta'
+                ? 'Resuelta'
+                : incidencia.estado}
             </Text>
-            </View>
+          </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.label}>🗓️ Fecha reporte</Text>
             <Text style={styles.value}>{new Date(incidencia.fecha_reporte).toLocaleDateString()}</Text>
@@ -149,36 +141,78 @@ function tiempoToSegundos(horasStr?: string) {
             <Text style={styles.label}>⏱ Tiempo de trabajo</Text>
             <CronometroIncidencia
               incidenciaId={Number(incidencia.id ?? 0)}
+              setCronometroIniciado={setCronometroIniciado}
             />
           </View>
         ) : (
           <>
-          <View style={styles.card}>
-            <Text style={styles.label}>⏱ Tiempo invertido</Text>
-            <Text style={styles.value}>
-              {incidencia.horas ? incidencia.horas : "No registrado"}
-            </Text>
-          </View>
-          <TouchableOpacity
-  style={styles.boton}
-  onPress={() => router.push({
-    pathname: '/facturas/formularioFactura',
-    params: {
-      incidenciaId: incidencia.id,
-      clienteId: clienteId,
-      tecnicoId: tecnicoId,
-    }
-  })}
->
-  <Text style={styles.botonTexto}>Crear Factura</Text>
-</TouchableOpacity>
-
-          
-          
-           </>
+            <View style={styles.card}>
+              <Text style={styles.label}>⏱ Tiempo invertido</Text>
+              <Text style={styles.value}>
+                {incidencia.horas ? incidencia.horas : "No registrado"}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.boton}
+              onPress={() => router.push({
+                pathname: '/facturas/formularioFactura',
+                params: {
+                  incidenciaId: incidencia.id,
+                  clienteId: clienteId,
+                  tecnicoId: tecnicoId,
+                }
+              })}
+            >
+              <Text style={styles.botonTexto}>Crear Factura</Text>
+            </TouchableOpacity>
+          </>
         )}
 
       </ScrollView>
+      <Modal
+        visible={mostrarModalSalida}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMostrarModalSalida(false)}
+      >
+        <View style={styles.modalBG}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>¿Salir de la incidencia?</Text>
+            <Text style={styles.modalText}>
+              Si sales, el cronómetro se reiniciará a 0.
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 14 }}>
+              <TouchableOpacity
+                style={styles.btnMini}
+                onPress={() => setMostrarModalSalida(false)}
+              >
+                <Text style={styles.btnMiniText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.btnMini, { backgroundColor: '#e9445a' }]}
+                onPress={async () => {
+                  setMostrarModalSalida(false);
+                  try {
+                    await actualizarIncidencia(incidenciaId, {
+                      horas: "00:00:00",
+                      estado: "pendiente",
+                      fecha_inicio: null,
+                      fecha_final: null,
+                      fecha_hora_pausa: null,
+                      fecha_ultimo_reinicio: null
+                    });
+                  } catch (e) {
+                    alert("Error reseteando la incidencia");
+                  }
+                  router.back();
+                }}
+              >
+                <Text style={styles.btnMiniText}>Salir</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -189,7 +223,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f0f2f4',
   },
-   boton: {
+  boton: {
     padding: 12,
     backgroundColor: '#2edbd1',
     width: '60%',
@@ -254,4 +288,29 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: '500',
   },
+  modalBG: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.18)',
+  },
+  modalBox: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 22,
+    minWidth: 250,
+    maxWidth: 340,
+    elevation: 8,
+    alignItems: 'center',
+  },
+  modalTitle: { fontWeight: 'bold', fontSize: 20, color: '#199', marginBottom: 10 },
+  modalText: { fontSize: 16, marginBottom: 18, color: '#444' },
+  btnMini: {
+    backgroundColor: '#2edbd1',
+    borderRadius: 7,
+    paddingVertical: 9,
+    paddingHorizontal: 32,
+    marginHorizontal: 5,
+  },
+  btnMiniText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
 });

@@ -12,8 +12,9 @@ export default function IncidenciaItem({ incidencia }: { incidencia: Incidencia 
         onPress={() => router.push(`/incidencias/${incidencia.id}`)}
         activeOpacity={0.6}
       >
-        <Text style={styles.itemTitle}>{incidencia.direccion}</Text>
-        <Text style={styles.itemDesc}>{incidencia.descripcion}</Text>
+        <Text style={styles.itemTitle}>{incidencia.descripcion}</Text>
+        <Text style={styles.itemDesc}>{incidencia.direccion}</Text>
+        
       </TouchableOpacity>
 
   );
