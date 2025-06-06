@@ -50,6 +50,7 @@ function RootNavigator() {
         <Stack.Screen name="autonomo"/>
         <Stack.Screen name="incidencias"/>
         <Stack.Screen name="clientes/index"/>
+        <Stack.Screen name="facturas"/>
       </Stack>
     );
   }
@@ -66,6 +67,7 @@ function RootNavigator() {
       <Stack>
         <Stack.Screen name="incidencias"/>
         <Stack.Screen name="clientes/index"/>
+        <Stack.Screen name="facturas"/>
       </Stack>
       
     );

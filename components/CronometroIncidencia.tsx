@@ -23,27 +23,24 @@ const CronometroIncidencia: React.FC<Props> = ({
   const [loading, setLoading] = useState(false);
   const [finalizado, setFinalizado] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [iniciado, setIniciado] = useState(false); // Nuevo estado para saber si alguna vez se inició
+  const [iniciado, setIniciado] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  // Conversión de "HH:MM:SS" a segundos
   function horasToSeconds(horas: string | null) {
     if (!horas) return 0;
     const [h, m, s] = horas.split(':').map(Number);
     return h * 3600 + m * 60 + s;
   }
 
-  // Refresca la incidencia y actualiza el cronómetro
-const refreshIncidencia = async () => {
-  const nueva = await getIncidenciaPorId(incidenciaId);
-  const secs = horasToSeconds(nueva.horas); // Esto siempre lo tienes que poner
-  setSeconds(secs); // <-- aquí SIEMPRE refresca con el tiempo del back
-  setIsRunning(nueva.estado === 'en_reparacion' && !nueva.pausada);
-  setFinalizado(nueva.estado === 'resuelta');
-  setIniciado(secs > 0 || (nueva.estado === 'en_reparacion' && !nueva.pausada));
-};
-
+  const refreshIncidencia = async () => {
+    const nueva = await getIncidenciaPorId(incidenciaId);
+    const secs = horasToSeconds(nueva.horas);
+    setSeconds(secs);
+    setIsRunning(nueva.estado === 'en_reparacion' && !nueva.pausada);
+    setFinalizado(nueva.estado === 'resuelta');
+    setIniciado(secs > 0 || (nueva.estado === 'en_reparacion' && !nueva.pausada));
+  };
 
   useEffect(() => {
     refreshIncidencia();
@@ -69,57 +66,50 @@ const refreshIncidencia = async () => {
         horas: '00:00:00'
       });
       await queryClient.invalidateQueries({ queryKey: ['incidencia', incidenciaId] });
-      setSeconds(0);         // Reinicia contador SOLO al iniciar
-      setIsRunning(true);    // ¡Arranca el cronómetro!
-      setFinalizado(false);  // Por si se usó parar antes
-      setIniciado(true);     // Marca como iniciado
+      setSeconds(0);
+      setIsRunning(true);
+      setFinalizado(false);
+      setIniciado(true);
     } catch (e) {
       console.log(e);
     }
     setLoading(false);
   };
 
-  
-const handlePausar = async () => {
-  setLoading(true);
-  try {
-    await pausarIncidencia(incidenciaId, new Date().toISOString());
-    await refreshIncidencia();
-    const nueva = await getIncidenciaPorId(incidenciaId);
-    const nuevosSegundos = horasToSeconds(nueva.horas);
-    // Si el backend devuelve 0, mantenemos el valor anterior
-    setSeconds(nuevosSegundos);
-    setIsRunning(false);
-    setFinalizado(false);
-    setIniciado(true); // Sigue marcado como iniciado
-    onChangeEstado?.(true);
-  } catch (e) {
-    console.log(e);
-  }
-  setLoading(false);
-};
+  const handlePausar = async () => {
+    setLoading(true);
+    try {
+      await pausarIncidencia(incidenciaId, new Date().toISOString());
+      await refreshIncidencia();
+      const nueva = await getIncidenciaPorId(incidenciaId);
+      const nuevosSegundos = horasToSeconds(nueva.horas);
+      setSeconds(nuevosSegundos);
+      setIsRunning(false);
+      setFinalizado(false);
+      setIniciado(true);
+      onChangeEstado?.(true);
+    } catch (e) {
+      console.log(e);
+    }
+    setLoading(false);
+  };
 
-const handleReanudar = async () => {
-  setLoading(true);
-  try {
-    await reanudarIncidencia(incidenciaId);
-    await refreshIncidencia(); // <-- Aquí recuperas el tiempo acumulado
-    setIniciado(true);
-    onChangeEstado?.(false);
-  } catch (e) {
-    console.log(e);
-  }
-  setLoading(false);
-};
-
+  const handleReanudar = async () => {
+    setLoading(true);
+    try {
+      await reanudarIncidencia(incidenciaId);
+      await refreshIncidencia();
+      setIniciado(true);
+      onChangeEstado?.(false);
+    } catch (e) {
+      console.log(e);
+    }
+    setLoading(false);
+  };
 
   function formatHoraMySQL(s: number) {
-    const h = Math.floor(s / 3600)
-      .toString()
-      .padStart(2, '0');
-    const m = Math.floor((s % 3600) / 60)
-      .toString()
-      .padStart(2, '0');
+    const h = Math.floor(s / 3600).toString().padStart(2, '0');
+    const m = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
     const ss = (s % 60).toString().padStart(2, '0');
     return `${h}:${m}:${ss}`;
   }
@@ -127,29 +117,21 @@ const handleReanudar = async () => {
   const handleParar = async () => {
     setIsRunning(false);
     setFinalizado(true);
-    setModalVisible(true);
-
     await actualizarIncidencia(incidenciaId, {
       estado: 'resuelta',
       fecha_final: new Date().toISOString().slice(0, 19).replace('T', ' '),
       horas: formatHoraMySQL(seconds),
     });
-
     queryClient.invalidateQueries({ queryKey: ['incidencia', incidenciaId] });
     queryClient.invalidateQueries({ queryKey: ['incidencias-resueltas', user.id] });
-  };
 
-  const handleCerrarModal = () => {
-    setModalVisible(false);
+    
+    
   };
 
   const format = (s: number) => {
-    const h = Math.floor(s / 3600)
-      .toString()
-      .padStart(2, '0');
-    const m = Math.floor((s % 3600) / 60)
-      .toString()
-      .padStart(2, '0');
+    const h = Math.floor(s / 3600).toString().padStart(2, '0');
+    const m = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
     const ss = (s % 60).toString().padStart(2, '0');
     return `${h}:${m}:${ss}`;
   };
@@ -158,82 +140,76 @@ const handleReanudar = async () => {
     <View style={styles.wrapper}>
       <Text style={styles.timer}>{format(seconds)}</Text>
       <View style={styles.row}>
-        {/* Botón INICIAR solo si aún no ha empezado */}
         {!isRunning && !finalizado && !iniciado && (
           <TouchableOpacity style={styles.btn} onPress={handleIniciar} disabled={loading}>
             <Text style={styles.btnText}>Iniciar</Text>
           </TouchableOpacity>
         )}
-
-        {/* Botón REANUDAR si ya se inició pero está pausado */}
         {!isRunning && !finalizado && iniciado && (
           <TouchableOpacity style={styles.btn} onPress={handleReanudar} disabled={loading}>
             <Text style={styles.btnText}>Reanudar</Text>
           </TouchableOpacity>
         )}
-
-        {/* Botón PAUSAR si está corriendo */}
         {isRunning && !finalizado && (
           <TouchableOpacity style={styles.btn} onPress={handlePausar} disabled={loading}>
             <Text style={styles.btnText}>Pausar</Text>
           </TouchableOpacity>
         )}
-
-        {/* Botón PARAR siempre visible salvo si ya está finalizado */}
         {!finalizado && (
           <TouchableOpacity
-  style={styles.btn}
-  onPress={() => setModalVisible(true)}
-  disabled={loading || seconds === 0}
->
-  <Text style={styles.btnText}>Parar</Text>
-</TouchableOpacity>
-
+            style={styles.btn}
+            onPress={() => setModalVisible(true)}
+            disabled={loading || seconds === 0}
+          >
+            <Text style={styles.btnText}>Parar</Text>
+          </TouchableOpacity>
         )}
       </View>
-
-      {/* ESTADO DEL CRONÓMETRO */}
       <Text style={{ marginTop: 6, color: finalizado ? "#27ae60" : isRunning ? "#27ae60" : "#888" }}>
         {finalizado
           ? 'Incidencia finalizada'
           : isRunning
-          ? 'En curso'
-          : iniciado
-          ? 'Pausado'
-          : 'Sin iniciar'}
+            ? 'En curso'
+            : iniciado
+              ? 'Pausado'
+              : 'Sin iniciar'}
       </Text>
 
+      {/* Modal de confirmación */}
       <Modal
-  visible={modalVisible}
-  transparent
-  animationType="fade"
-  onRequestClose={() => setModalVisible(false)}
->
-  <View style={styles.modalBG}>
-    <View style={styles.modalBox}>
-      <Text style={styles.modalTitle}>¿Parar incidencia?</Text>
-      <Text style={styles.modalText}>¿Seguro que quieres parar la incidencia? No podrás reanudarla después.</Text>
-      <View style={{ flexDirection: 'row', gap: 14 }}>
-        <TouchableOpacity
-          style={styles.btnMini}
-          onPress={() => setModalVisible(false)}
-        >
-          <Text style={styles.btnMiniText}>Cancelar</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.btnMini, { backgroundColor: '#e9445a' }]}
-          onPress={async () => {
-            setModalVisible(false);
-            await handleParar(); // Aquí tu función de parar
-          }}
-        >
-          <Text style={styles.btnMiniText}>Parar</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  </View>
-</Modal>
-
+        visible={modalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalBG}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>¿Parar incidencia?</Text>
+            <Text style={styles.modalText}>¿Seguro que quieres parar la incidencia? No podrás reanudarla después.</Text>
+            <View style={{ flexDirection: 'row', gap: 14 }}>
+              <TouchableOpacity
+                style={styles.btnMini}
+                onPress={async() => {setModalVisible(false)
+                }
+                  
+                }
+              >
+                <Text style={styles.btnMiniText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.btnMini, { backgroundColor: '#e9445a' }]}
+                onPress={async () => {
+                  setModalVisible(false);
+                   await handleParar(); // espera que handleParar termine
+                   console.log("hola")
+                }}
+              >
+                <Text style={styles.btnMiniText}>Parar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };

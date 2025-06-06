@@ -41,7 +41,7 @@ if (loading || !user) {
           title="Facturas"
           icon="💼"
           color="#81d4fa"
-          /*onPress={() => {'/autonomo/facturas'}}*/
+          onPress={() => router.push('/facturas')}
         />
         <Card
           title="Perfil"

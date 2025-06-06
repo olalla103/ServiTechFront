@@ -1,5 +1,5 @@
 import { Direccion } from '@/types/direccion';
-import api from '../utils/api';
+import api from './api';
 
 export async function getDireccionesUsuario(usuario_id: number) {
   const res = await api.get(`/direcciones/usuarios/${usuario_id}/direcciones`);

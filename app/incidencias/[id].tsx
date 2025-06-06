@@ -1,7 +1,8 @@
+import { useAuth } from '@/context/AuthProvider';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CronometroIncidencia from '../../components/CronometroIncidencia'; // ajusta la ruta si es necesario
 import { getIncidenciaPorId } from '../../utils/handler_incidencias';
@@ -27,6 +28,8 @@ const refetchIncidencias = () => {
   }, [])
 );
 
+ const { user } = useAuth();
+const [mostrarFormularioFactura, setMostrarFormularioFactura] = useState(false);
 
  const { data: incidencia, isLoading, error } = useQuery({
   queryKey: ['incidencia', incidenciaId],
@@ -149,12 +152,30 @@ function tiempoToSegundos(horasStr?: string) {
             />
           </View>
         ) : (
+          <>
           <View style={styles.card}>
             <Text style={styles.label}>⏱ Tiempo invertido</Text>
             <Text style={styles.value}>
               {incidencia.horas ? incidencia.horas : "No registrado"}
             </Text>
           </View>
+          <TouchableOpacity
+  style={styles.boton}
+  onPress={() => router.push({
+    pathname: '/facturas/formularioFactura',
+    params: {
+      incidenciaId: incidencia.id,
+      clienteId: clienteId,
+      tecnicoId: tecnicoId,
+    }
+  })}
+>
+  <Text style={styles.botonTexto}>Crear Factura</Text>
+</TouchableOpacity>
+
+          
+          
+           </>
         )}
 
       </ScrollView>
@@ -167,6 +188,21 @@ const styles = StyleSheet.create({
     paddingTop: 80,
     flex: 1,
     backgroundColor: '#f0f2f4',
+  },
+   boton: {
+    padding: 12,
+    backgroundColor: '#2edbd1',
+    width: '60%',
+    alignSelf: 'center',
+    borderRadius: 8,
+    marginVertical: 16,
+    justifyContent: 'center',
+  },
+  botonTexto: {
+    color: '#fff',
+    fontSize: 16,
+    textAlign: 'center',
+    fontWeight: '600',
   },
   centered: {
     flex: 1,
