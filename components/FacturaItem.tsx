@@ -5,7 +5,7 @@ import { Factura } from '../types/factura';
 
 export default function FacturaItem({ factura }: { factura: Factura }) {
   // Cálculo del precio total de la factura
-  const precio = (factura.cantidad_total ?? 0) + (factura.cantidad_adicional ?? 0) + (factura.IVA ?? 0);
+  const precio = (factura.cantidad_total ?? 0);
 
   return (
     <View style={styles.item}>

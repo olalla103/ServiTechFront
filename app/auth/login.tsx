@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -13,24 +14,57 @@ import {
 import Fondo from '../../components/fondo'; // Ajusta la ruta si es necesario
 import { useAuth } from '../../context/AuthProvider';
 
+type TipoUsuario = "autonomo" | "admin_empresa" | "tecnico" | "cliente";
+function getTipoUsuario(user: any): TipoUsuario {
+  if (user?.admin_empresa && !!user.especialidad) return "autonomo";
+  if (user?.admin_empresa && !user.especialidad) return "admin_empresa";
+  if (!user?.admin_empresa && !!user.especialidad) return "tecnico";
+  return "cliente";
+}
+
 export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
+  const [mostrarPass, setMostrarPass] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { login, loading } = useAuth();
 
-
-
   const handleEmailLogin = async () => {
-    setError(null);
-    try {
-      await login(email, pass); // <-- ¡Debe llamar a login del contexto!
+  setError(null);
+
+  // VALIDACIONES: campos obligatorios
+  if (!email.trim() || !pass.trim()) {
+    setError('Por favor, rellena todos los campos.');
+    return;
+  }
+
+  // Si quieres también una validación de email básico:
+  if (!email.match(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)) {
+    setError('Introduce un email válido.');
+    return;
+  }
+
+  try {
+    // Aquí, login debe devolver el usuario o guardarlo en contexto
+    const user = await login(email, pass);
+    const tipo = getTipoUsuario(user);
+
+    if (tipo === "autonomo") {
       router.replace('/autonomo');
-    } catch (e: any) {
-      setError(e.message || 'Error desconocido');
+    } else if (tipo === "admin_empresa") {
+      router.replace('/autonomo');
+    } else if (tipo === "tecnico") {
+      router.replace('/autonomo');
+    } else if (tipo === "cliente") {
+      router.replace('/usuarioCliente');
+    } else {
+      console.log("No ha iniciado sesión con ningún usuario.");
     }
-  };
+  } catch (e: any) {
+    setError(e.message || 'Error desconocido');
+  }
+};
 
   return (
     <Fondo>
@@ -57,14 +91,30 @@ export default function LoginScreen() {
               keyboardType="email-address"
               style={styles.input}
             />
-            <TextInput
-              value={pass}
-              onChangeText={setPass}
-              placeholder="Contraseña"
-              placeholderTextColor="#fff"
-              secureTextEntry
-              style={styles.input}
-            />
+            {/* Campo contraseña con icono de ojo */}
+            <View style={styles.inputPasswordContainer}>
+              <TextInput
+                value={pass}
+                onChangeText={setPass}
+                placeholder="Contraseña"
+                placeholderTextColor="#fff"
+                secureTextEntry={!mostrarPass}
+                style={[styles.input, { flex: 1, marginBottom: 0 }]}
+              />
+              <TouchableOpacity onPress={() => setMostrarPass(!mostrarPass)}>
+                <Ionicons
+                  name={mostrarPass ? "eye-off" : "eye"}
+                  size={22}
+                  color="#fff"
+                  style={styles.eyeIcon}
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* Botón de "Olvidé mi contraseña" */}
+            <TouchableOpacity onPress={() => router.push('/auth/cambiarPassword')}>
+              <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
+            </TouchableOpacity>
           </View>
 
           {/* Error */}
@@ -105,7 +155,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
-    paddingBottom: 80,
+    paddingBottom: 50,
   },
   logo: {
     fontSize: 64,
@@ -130,6 +180,16 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     textAlign: 'center',
   },
+  forgotPasswordText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+    marginTop: 12,
+    marginBottom: 0,
+    textAlign: 'center',
+    textDecorationLine: 'underline',
+    letterSpacing: 0.3,
+  },
   inputContainer: {
     width: '100%',
     marginBottom: 18,
@@ -146,6 +206,22 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 1, height: 2 },
     shadowRadius: 8,
     shadowOpacity: 0.25,
+  },
+  inputPasswordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+    backgroundColor: 'rgba(255,255,255,0.20)',
+    borderRadius: 24,
+    paddingRight: 8,
+    shadowColor: '#0006',
+    shadowOffset: { width: 1, height: 2 },
+    shadowRadius: 8,
+    shadowOpacity: 0.25,
+  },
+  eyeIcon: {
+    paddingHorizontal: 6,
+    paddingVertical: 8,
   },
   button: {
     backgroundColor: '#2edbd1',

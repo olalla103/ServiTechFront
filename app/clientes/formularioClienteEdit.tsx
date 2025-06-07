@@ -205,6 +205,7 @@ export default function FormularioClienteEdicion({
   return (
     <>
       {/* Botón de volver */}
+      <View style={styles.fondo}>
       <TouchableOpacity
         style={styles.iconoFlecha}
         onPress={() => router.back()}
@@ -212,10 +213,13 @@ export default function FormularioClienteEdicion({
       >
         <Ionicons name="arrow-back" size={28} color="#2edbd1" />
       </TouchableOpacity>
-
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>
+       <Text style={styles.title}>
           {clienteEditar ? 'Editar Cliente' : 'Nuevo Cliente'}
+        </Text>
+      </View>
+      <ScrollView contentContainerStyle={styles.container}>
+         <Text style={styles.seccionDirecciones}>
+           Datos del cliente
         </Text>
         <TextInput
           placeholder="Nombre"
@@ -234,14 +238,6 @@ export default function FormularioClienteEdicion({
           style={styles.input}
           value={apellido2}
           onChangeText={setApellido2}
-        />
-        <TextInput
-          placeholder="Email"
-          style={styles.input}
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
         />
         <TextInput
           placeholder="Teléfono"
@@ -364,7 +360,10 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     paddingBottom: 140,
-    backgroundColor: "#f8f9fb",
+    backgroundColor: "#f8fafc",
+  },
+  fondo:{
+    backgroundColor:'#f8fafc'
   },
   title: {
     fontSize: 24,
@@ -372,7 +371,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 18,
     marginTop: 70,
-    color: '#00b2b7',
+    paddingTop:10,
+    color: '#1fc7b6',
     letterSpacing: 1.1
   },
   input: {

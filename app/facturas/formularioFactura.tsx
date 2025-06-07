@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -24,7 +24,6 @@ export default function FormularioFactura() {
   const cliente_id = Number(clienteId);
   const tecnico_id = Number(tecnicoId);
 
-
   const { data: productosLista, isLoading, error } = useQuery({
     queryKey: ['productos'],
     queryFn: getProductos,
@@ -34,13 +33,6 @@ export default function FormularioFactura() {
   const [observaciones, setObservaciones] = useState('');
   const [loading, setLoading] = useState(false);
   const [open,setOpen]=useState(false);
-
-  // Inicializar con un producto
-  useEffect(() => {
-    if (productosLista && productos.length === 0 && productosLista.length > 0) {
-      setProductos([{ producto_id: productosLista[0].id, cantidad: 1 }]);
-    }
-  }, [productosLista]);
 
   const handleChangeProducto = (idx: number, producto_id: number | null) => {
     if (producto_id === null) return;
@@ -68,25 +60,37 @@ export default function FormularioFactura() {
     setProductos(productos.filter((_, i) => i !== idx));
   };
 
-  const handleSubmit = async () => {
-    setLoading(true);
-    try {
-      const datos = {
-  incidencia_id,
-  cliente_id,
-  tecnico_id,
-  productos: productos.filter(p => p.cantidad > 0),
-  observaciones: observaciones.trim(),
+  const [facturada,setFacturada] = useState(false);
+  const queryClient = useQueryClient();
+
+const handleSubmit = async () => {
+  setLoading(true);
+  try {
+    const datos = {
+      incidencia_id,
+      cliente_id,
+      tecnico_id,
+      productos: productos.filter(p => p.cantidad > 0), // ← puede ser []
+      observaciones: observaciones.trim(),
+    };
+    await crearFactura(datos);
+
+    // Refresca las queries relacionadas
+    if (incidencia_id) {
+  queryClient.invalidateQueries({ queryKey: ['facturaIncidencia', incidencia_id] });
+  queryClient.invalidateQueries({ queryKey: ['incidencia', incidencia_id] });
+}
+
+
+    setFacturada(true);
+    Alert.alert("Factura creada", "La factura se ha generado correctamente.");
+    router.back();
+  } catch (err) {
+    Alert.alert("Error", "No se pudo crear la factura.");
+  } finally {
+    setLoading(false);
+  }
 };
-      await crearFactura(datos);
-      Alert.alert("Factura creada", "La factura se ha generado correctamente.");
-      router.back();
-    } catch (err) {
-      Alert.alert("Error", "No se pudo crear la factura.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -107,6 +111,13 @@ export default function FormularioFactura() {
     <View style={styles.screen}>
       <Text style={styles.titulo}>Crear factura</Text>
       <Text style={styles.label}>Productos utilizados</Text>
+
+      {productos.length === 0 && (
+        <Text style={{ color: "#888", marginBottom: 8, fontStyle: 'italic' }}>
+          No hay productos añadidos a la factura.
+        </Text>
+      )}
+
       {productos.map((prod, idx) => {
         // Para el dropdown: Solo productos no usados por otro campo, excepto el actual
         const usados = productos.map((p, i) => i !== idx && p.producto_id).filter(Boolean);
@@ -120,8 +131,7 @@ export default function FormularioFactura() {
         return (
           <View key={idx} style={styles.productoRow}>
             <View style={{ flex: 1, zIndex: 999 - idx }}>
-       
-<DropDownPicker
+              <DropDownPicker
   open={open}
   setOpen={setOpen}
   value={prod.producto_id}
@@ -129,19 +139,12 @@ export default function FormularioFactura() {
     const newValue = callback(prod.producto_id);
     handleChangeProducto(idx, newValue);
   }}
-  items={productosLista
-    .filter(
-      (p: Producto) =>
-        p.id === prod.producto_id ||
-        !productos.some((seleccionado, i2) => i2 !== idx && seleccionado.producto_id === p.id)
-    )
-    .map((p: Producto) => ({
-      label: p.nombre,
-      value: p.id,
-    }))}
+  items={items}
   containerStyle={{ minHeight: 40, zIndex: 999 - idx }}
   style={{ backgroundColor: '#fff', borderRadius: 8 }}
   dropDownContainerStyle={{ borderRadius: 8, zIndex: 999 - idx }}
+  searchable={true}
+  searchPlaceholder="Buscar producto..."
 />
 
             </View>
@@ -154,14 +157,14 @@ export default function FormularioFactura() {
                 onChangeText={txt => handleChangeCantidad(idx, Number(txt))}
               />
             </View>
-            {productos.length > 1 && (
-              <TouchableOpacity onPress={() => handleRemoveProducto(idx)} style={{ marginLeft: 4 }}>
-                <Ionicons name="close" size={22} color="#e9445a" />
-              </TouchableOpacity>
-            )}
+            {/* Mostrar siempre la X para eliminar */}
+            <TouchableOpacity onPress={() => handleRemoveProducto(idx)} style={{ marginLeft: 4 }}>
+              <Ionicons name="close" size={22} color="#e9445a" />
+            </TouchableOpacity>
           </View>
         );
       })}
+
       <TouchableOpacity style={styles.addProductoBtn} onPress={handleAddProducto}>
         <Ionicons name="add-circle-outline" size={20} color="#2edbd1" />
         <Text style={{ color: '#2edbd1', fontWeight: '600', marginLeft: 2 }}>Añadir producto</Text>
@@ -180,7 +183,7 @@ export default function FormularioFactura() {
         <TouchableOpacity style={[styles.btn, { backgroundColor: '#eee' }]} onPress={() => router.back()} disabled={loading}>
           <Text style={{ color: '#888', fontWeight: '700' }}>Cancelar</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.btn, { backgroundColor: '#2edbd1' }]} onPress={handleSubmit} disabled={loading}>
+        <TouchableOpacity style={[styles.btn, { backgroundColor: '#2edbd1' }]} onPress={handleSubmit} disabled={loading || facturada}>
           {loading ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#fff', fontWeight: '700' }}>Guardar factura</Text>}
         </TouchableOpacity>
       </View>

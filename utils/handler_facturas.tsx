@@ -1,3 +1,5 @@
+import * as FileSystem from "expo-file-system";
+import * as Sharing from 'expo-sharing';
 import api from './api';
 
 // Listar todas las facturas
@@ -42,6 +44,11 @@ export async function getFacturasResueltasPorTecnico(tecnicoId: number) {
   return res.data;
 }
 
+export async function getFacturaPorIncidenciaId(incidenciaId: number) {
+  const res = await api.get(`/facturas/por-incidencia/${incidenciaId}`);
+  return res.data;
+}
+
 // Editar una factura existente
 export async function actualizarFactura(numero_factura: number, datos: any) {
   const res = await api.patch(`/facturas/${numero_factura}`, datos);
@@ -57,4 +64,24 @@ export async function eliminarFactura(numero_factura: number) {
 export async function getFacturaPorTecnicoYIncidencia(tecnicoId: number, incidenciaId: number) {
   const res = await api.get(`/facturas/tecnico/${tecnicoId}/incidencia/${incidenciaId}`);
   return res.data;
+}
+
+export async function descargarYCompartirFactura(numero_factura: number) {
+  try {
+    const urlPdf = `${api.defaults.baseURL}/facturas/descargar/${numero_factura}`;
+    const nombreArchivo = `factura${numero_factura}.pdf`;
+    const localUri = FileSystem.cacheDirectory + nombreArchivo;
+
+    // Descarga el PDF con FileSystem
+    const { uri } = await FileSystem.downloadAsync(urlPdf, localUri);
+
+    // Abre el diálogo de compartir/guardar
+    await Sharing.shareAsync(uri);
+    await FileSystem.deleteAsync(uri, { idempotent: true });
+    return true;
+  } catch (error) {
+    alert('No se pudo descargar la factura');
+    console.error('Error descargando PDF:', error);
+    return false;
+  }
 }

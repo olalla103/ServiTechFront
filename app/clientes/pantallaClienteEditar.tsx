@@ -6,7 +6,7 @@ import React from 'react';
 import { ActivityIndicator, Text } from 'react-native';
 import { getDireccionesUsuario } from '../../utils/handler_direcciones';
 import { getUsuarioIdByEmail, getUsuarioPorId } from '../../utils/handler_usuarios';
-import FormularioClienteEdicion from '../clientes/formularioClienteEdit'; // ajusta si es necesario
+import FormularioClienteEdicion from './formularioClienteEdit'; // ajusta si es necesario
 
 export default function PantallaClienteEditar() {
   const { clienteEmail } = useLocalSearchParams();

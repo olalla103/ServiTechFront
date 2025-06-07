@@ -1,13 +1,13 @@
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import 'react-native-reanimated';
 import { AuthProvider, useAuth } from '../context/AuthProvider';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
 
 // Instanciamos el QueryClient una sola vez
 const queryClient = new QueryClient();
@@ -23,6 +23,7 @@ function getTipoUsuario(user: any): TipoUsuario {
 
 // Este componente va dentro del AuthProvider
 function RootNavigator() {
+  console.log("🌍 PATHNAME ACTUAL:", usePathname());
   const { user, loading, login, logout } = useAuth();
 
   // Espera a que cargue la sesión (importante)
@@ -32,7 +33,7 @@ function RootNavigator() {
   if (!user) {
     console.log('Sin usuario: stack auth');
     return (
-      <Stack>
+      <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="auth"/>
         {/* Otras screens de auth si tienes */}
       </Stack>
@@ -49,8 +50,9 @@ function RootNavigator() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="autonomo"/>
         <Stack.Screen name="incidencias"/>
-        <Stack.Screen name="clientes/index"/>
+        <Stack.Screen name="clientes"/>
         <Stack.Screen name="facturas"/>
+        <Stack.Screen name="productos"/>
       </Stack>
     );
   }
@@ -62,19 +64,24 @@ function RootNavigator() {
     console.log('Stack tecnico');
     // Stack de técnico
     return(
-      
-     
       <Stack>
         <Stack.Screen name="incidencias"/>
-        <Stack.Screen name="clientes/index"/>
+        <Stack.Screen name="clientes"/>
         <Stack.Screen name="facturas"/>
+        <Stack.Screen name="productos"/>
       </Stack>
-      
     );
   }
-  // if (tipo === "cliente") {
-  //   // Stack de cliente
-  // }
+ if (tipo === "cliente") {
+     // Stack de cliente
+    console.log('Stack cliente');
+     return(
+      <Stack screenOptions={{headerShown: false}}>
+       <Stack.Screen name="usuarioCliente"/>
+      </Stack>
+     );
+      
+   }
 
   // Si no coincide ninguno, fallback
   return (
@@ -97,7 +104,6 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-
       <QueryClientProvider client={queryClient}>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <RootNavigator />

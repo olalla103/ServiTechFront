@@ -1,23 +1,23 @@
 import { ProductoFactura } from '@/types/productofactura';
-import { getFacturaPorId } from '@/utils/handler_facturas';
+import { descargarYCompartirFactura, getFacturaPorId } from '@/utils/handler_facturas';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
-import React from 'react';
+import { useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { getUsuarioPorId } from '../../utils/handler_usuarios';
 
-
 export default function DetalleFacturaScreen() {
-  const { id   } = useLocalSearchParams();
+  const { id } = useLocalSearchParams();
   const facturaId = Number(id);
 
   // Cargamos la factura (incluye productos)
-const { data: factura, isLoading, error } = useQuery({
-  queryKey: ['factura', facturaId],
-  queryFn: () => getFacturaPorId(facturaId),
-  enabled: !!facturaId,
-});
+  const { data: factura, isLoading, error } = useQuery({
+    queryKey: ['factura', facturaId],
+    queryFn: () => getFacturaPorId(facturaId),
+    enabled: !!facturaId,
+  });
+
   // Opcional: cargar cliente/tecnico (solo para mostrar nombres)
   const clienteQuery = useQuery({
     queryKey: ['cliente', factura?.cliente_id],
@@ -30,6 +30,15 @@ const { data: factura, isLoading, error } = useQuery({
     queryFn: () => getUsuarioPorId(factura?.tecnico_id!),
     enabled: !!factura?.tecnico_id,
   });
+
+  const [descargando, setDescargando] = useState(false);
+
+async function handleDescarga() {
+  setDescargando(true);
+  await descargarYCompartirFactura(factura.numero_factura);
+  setDescargando(false);
+}
+ 
 
   if (isLoading)
     return (
@@ -52,12 +61,30 @@ const { data: factura, isLoading, error } = useQuery({
 
   return (
     <View style={styles.background}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Botón back */}
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.8}>
-          <Ionicons name="arrow-back" size={26} color="#47b6a3" />
+      {/* Barra superior con flecha e icono de descarga */}
+      <View style={styles.headerBar}>
+        <TouchableOpacity
+          style={styles.iconoFlecha}
+          onPress={() => router.back()}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="arrow-back" size={28} color="#2edbd1" />
         </TouchableOpacity>
-        {/* Factura Card */}
+        <View style={{ flex: 1 }} />
+        <TouchableOpacity
+  style={styles.iconoDescarga}
+  onPress={handleDescarga}
+  activeOpacity={0.1}
+  disabled={descargando}
+>
+  {descargando ? (
+    <ActivityIndicator size={21} color="#2edbd1" />
+  ) : (
+    <Ionicons name="download-outline" size={29} color="#2edbd1" />
+  )}
+</TouchableOpacity>
+      </View>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.card}>
           {/* Cabecera */}
           <View style={styles.headerRow}>
@@ -90,16 +117,16 @@ const { data: factura, isLoading, error } = useQuery({
             <Text style={[styles.tablaCell, { flex: 1, textAlign: 'right' }]}>Precio</Text>
           </View>
           {factura.productos?.length ? (
-  factura.productos.map((prod: ProductoFactura, idx: number) => (
-    <View key={prod.id ?? idx} style={styles.tablaRow}>
-      <Text style={[styles.tablaCell, { flex: 2 }]}>{prod.nombre}</Text>
-      <Text style={[styles.tablaCell, { flex: 1, textAlign: 'center' }]}>{prod.cantidad}</Text>
-      <Text style={[styles.tablaCell, { flex: 1, textAlign: 'right' }]}>{prod.precio_unitario.toFixed(2)} €</Text>
-    </View>
-  ))
-) : (
-  <Text>No hay productos en esta factura.</Text>
-)}
+            factura.productos.map((prod: ProductoFactura, idx: number) => (
+              <View key={prod.id ?? idx} style={styles.tablaRow}>
+                <Text style={[styles.tablaCell, { flex: 2 }]}>{prod.nombre}</Text>
+                <Text style={[styles.tablaCell, { flex: 1, textAlign: 'center' }]}>{prod.cantidad}</Text>
+                <Text style={[styles.tablaCell, { flex: 1, textAlign: 'right' }]}>{prod.precio_unitario.toFixed(2)} €</Text>
+              </View>
+            ))
+          ) : (
+            <Text>No hay productos en esta factura.</Text>
+          )}
           <View style={styles.divider} />
           {/* Desglose de totales */}
           <View style={styles.totalRow}>
@@ -129,7 +156,6 @@ const { data: factura, isLoading, error } = useQuery({
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   background: {
     flex: 1,
@@ -191,11 +217,32 @@ const styles = StyleSheet.create({
     marginTop: 3,
     gap: 10,
   },
+   iconoFlecha: {
+    padding: 8,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    elevation: 4,
+  },
+  iconoDescarga: {
+    padding: 8,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    elevation: 4,
+  },
   labelSmall: {
     fontSize: 12,
     color: '#989898',
     fontWeight: '700',
     marginBottom: 2,
+  },
+   headerBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    paddingHorizontal: 16,
+    marginTop: 54,
+    marginBottom: 4,
   },
   valueBig: {
     fontSize: 15,

@@ -8,9 +8,24 @@ export async function getIncidencias() {
 
 // 2. Crear una nueva incidencia
 export async function crearIncidencia(incidencia: any) {
-  const res = await api.post('/incidencias', incidencia);
-  return res.data;
+  console.log("Incidencia que se va a enviar:", incidencia);
+
+  try {
+    const res = await api.post('/incidencias/', incidencia);
+    console.log("Respuesta del backend:", res.status, res.data);
+    return res.data;
+  } catch (error: any) {
+    if (error.response) {
+      // El backend devolvió un error, logueamos todo:
+      console.log("Error del backend:", error.response.status, error.response.data);
+    } else {
+      // Error de red u otro
+      console.log("Error sin respuesta del backend:", error.message);
+    }
+    throw error;
+  }
 }
+
 
 export async function finalizarIncidencia(
   incidencia_id: number,

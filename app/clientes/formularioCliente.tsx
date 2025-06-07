@@ -119,153 +119,153 @@ export default function FormularioCliente({ onClose }: { onClose: () => void }) 
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: '#f6f8fb' }}>
       {/* Flecha de volver */}
       <TouchableOpacity
-        style={styles.iconoFlecha}
-        onPress={() => router.back()}
-        activeOpacity={0.8}
+      style={styles.iconoFlecha}
+      onPress={() => router.back()}
+      activeOpacity={0.8}
       >
-        <Ionicons name="arrow-back" size={28} color="#2edbd1" />
+      <Ionicons name="arrow-back" size={28} color="#2edbd1" />
       </TouchableOpacity>
 
       <View style={styles.formContainer}>
-        <Text style={styles.title}>Añadir Cliente</Text>
-        <TextInput
-          placeholder="Nombre *"
-          style={styles.input}
-          value={nombre}
-          onChangeText={setNombre}
-        />
-        <TextInput
-          placeholder="Primer apellido *"
-          style={styles.input}
-          value={apellido1}
-          onChangeText={setApellido1}
-        />
-        <TextInput
-          placeholder="Segundo apellido *"
-          style={styles.input}
-          value={apellido2}
-          onChangeText={setApellido2}
-        />
-        <TextInput
-          placeholder="Email *"
-          style={styles.input}
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-        <TextInput
-          placeholder="Contraseña *"
-          style={styles.input}
-          value={contraseña}
-          onChangeText={setContraseña}
-          secureTextEntry={true}
-          autoCapitalize="none"
-        />
-        <TextInput
-          placeholder="Teléfono *"
-          style={styles.input}
-          value={telefono}
-          inputAccessoryViewID={Platform.OS === 'ios' ? inputAccessoryViewID : undefined}
-          onChangeText={setTelefono}
-          keyboardType="phone-pad"
-        />
-        {/* InputAccessoryView solo se muestra en iOS */}
-        {Platform.OS === 'ios' && (
-          <InputAccessoryView nativeID={inputAccessoryViewID}>
-            <Button onPress={Keyboard.dismiss} title="Hecho" color="#2edbd1" />
-          </InputAccessoryView>
-        )}
+      <Text style={styles.title}>Añadir Cliente</Text>
+      <TextInput
+        placeholder="Nombre *"
+        style={styles.input}
+        value={nombre}
+        onChangeText={setNombre}
+      />
+      <TextInput
+        placeholder="Primer apellido *"
+        style={styles.input}
+        value={apellido1}
+        onChangeText={setApellido1}
+      />
+      <TextInput
+        placeholder="Segundo apellido *"
+        style={styles.input}
+        value={apellido2}
+        onChangeText={setApellido2}
+      />
+      <TextInput
+        placeholder="Email *"
+        style={styles.input}
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
+      <TextInput
+        placeholder="Contraseña (8 caracteres) *"
+        style={styles.input}
+        value={contraseña}
+        onChangeText={setContraseña}
+        secureTextEntry={true}
+        autoCapitalize="none"
+      />
+      <TextInput
+        placeholder="Teléfono *"
+        style={styles.input}
+        value={telefono}
+        inputAccessoryViewID={Platform.OS === 'ios' ? inputAccessoryViewID : undefined}
+        onChangeText={setTelefono}
+        keyboardType="phone-pad"
+      />
+      {/* InputAccessoryView solo se muestra en iOS */}
+      {Platform.OS === 'ios' && (
+        <InputAccessoryView nativeID={inputAccessoryViewID}>
+        <Button onPress={Keyboard.dismiss} title="Hecho" color="#2edbd1" />
+        </InputAccessoryView>
+      )}
 
-        {/* Selector de fecha (abre modal) */}
-        <TouchableOpacity
-          style={[styles.input, { justifyContent: 'center' }]}
-          onPress={handleOpenDate}
-          activeOpacity={0.8}
-        >
-          <Text style={{ color: fechaNacimiento ? '#222' : '#999' }}>
-            {fechaNacimiento
-              ? fechaNacimiento.toISOString().slice(0, 10)
-              : 'Fecha de nacimiento *'}
-          </Text>
-        </TouchableOpacity>
-        {/* Modal para el DatePicker */}
-        <Modal
-          visible={showDate}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowDate(false)}
-        >
-          <View style={styles.modalBackground}>
-            <View style={styles.pickerContainer}>
-              <DateTimePicker
-                value={fechaNacimiento || new Date(2000, 0, 1)}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                onChange={handleDateChange}
-                maximumDate={new Date()}
-                style={{ backgroundColor: '#fff' }}
-              />
-              <TouchableOpacity
-                onPress={() => setShowDate(false)}
-                style={styles.hechoBtn}
-              >
-                <Text style={styles.hechoText}>Hecho</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
+      {/* Selector de fecha (abre modal) */}
+      <TouchableOpacity
+        style={[styles.input, { justifyContent: 'center' }]}
+        onPress={handleOpenDate}
+        activeOpacity={0.8}
+      >
+        <Text style={{ color: fechaNacimiento ? '#222' : '#999' }}>
+        {fechaNacimiento
+          ? fechaNacimiento.toISOString().slice(0, 10)
+          : 'Fecha de nacimiento *'}
+        </Text>
+      </TouchableOpacity>
+      {/* Modal para el DatePicker */}
+      <Modal
+        visible={showDate}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDate(false)}
+      >
+        <View style={styles.modalBackground}>
+        <View style={styles.pickerContainer}>
+          <DateTimePicker
+          value={fechaNacimiento || new Date(2000, 0, 1)}
+          mode="date"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={handleDateChange}
+          maximumDate={new Date()}
+          style={{ backgroundColor: '#fff' }}
+          />
+          <TouchableOpacity
+          onPress={() => setShowDate(false)}
+          style={styles.hechoBtn}
+          >
+          <Text style={styles.hechoText}>Hecho</Text>
+          </TouchableOpacity>
+        </View>
+        </View>
+      </Modal>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleSubmit}
-          disabled={mutation.isPending}
-        >
-          <Text style={styles.buttonText}>Añadir Cliente</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.cancelButton} onPress={handleCerrarTodo}>
-          <Text style={{ color: '#888', fontWeight: 'bold' }}>Cancelar</Text>
-        </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleSubmit}
+        disabled={mutation.isPending}
+      >
+        <Text style={styles.buttonText}>Añadir Cliente</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.cancelButton} onPress={handleCerrarTodo}>
+        <Text style={{ color: '#888', fontWeight: 'bold' }}>Cancelar</Text>
+      </TouchableOpacity>
       </View>
 
       {/* Modal para preguntar si añadir direcciones */}
       <Modal
-        visible={mostrarModal}
-        transparent
-        animationType="fade"
-        onRequestClose={handleCerrarTodo}
+      visible={mostrarModal}
+      transparent
+      animationType="fade"
+      onRequestClose={handleCerrarTodo}
       >
-        <View style={styles.modalBackground}>
-          <View style={styles.customModal}>
-            <Text style={styles.customModalTitle}>
-              ¿Quieres añadir direcciones?
-            </Text>
-            <View style={{ flexDirection: 'row', marginTop: 12 }}>
-              <TouchableOpacity
-                style={styles.modalBtnSi}
-                onPress={handleAbrirDirecciones}
-              >
-                <Ionicons name="add-circle" size={20} color="#fff" style={{ marginRight: 6 }} />
-                <Text style={styles.modalBtnText}>Sí</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalBtnNo}
-                onPress={handleCerrarTodo}
-              >
-                <Ionicons name="close-circle" size={20} color="#888" style={{ marginRight: 6 }} />
-                <Text style={[styles.modalBtnText, { color: '#888' }]}>No</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+      <View style={styles.modalBackground}>
+        <View style={styles.customModal}>
+        <Text style={styles.customModalTitle}>
+          ¿Quieres añadir direcciones?
+        </Text>
+        <View style={{ flexDirection: 'row', marginTop: 12 }}>
+          <TouchableOpacity
+          style={styles.modalBtnSi}
+          onPress={handleAbrirDirecciones}
+          >
+          <Ionicons name="add-circle" size={20} color="#fff" style={{ marginRight: 6 }} />
+          <Text style={styles.modalBtnText}>Sí</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+          style={styles.modalBtnNo}
+          onPress={handleCerrarTodo}
+          >
+          <Ionicons name="close-circle" size={20} color="#888" style={{ marginRight: 6 }} />
+          <Text style={[styles.modalBtnText, { color: '#888' }]}>No</Text>
+          </TouchableOpacity>
         </View>
+        </View>
+      </View>
       </Modal>
       <AlertModal
-        visible={errorVisible}
-        message={errorMessage}
-        onClose={() => setErrorVisible(false)}
+      visible={errorVisible}
+      message={errorMessage}
+      onClose={() => setErrorVisible(false)}
       />
     </View>
   );
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
     left: 18,
     zIndex: 10,
     padding: 8,
-    backgroundColor: '#f8f9fb',
+    backgroundColor: '#fff',
     borderRadius: 20,
     elevation: 4,
   },

@@ -1,4 +1,5 @@
 import { Factura } from '@/types/factura';
+import { getUsuarioIdByEmail } from '@/utils/handler_usuarios';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@react-navigation/elements';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -12,6 +13,7 @@ import { eliminarFactura, getFacturasResueltasPorTecnico } from '../../utils/han
 
 export default function PantallaFacturas() {
   const { user } = useAuth();
+  const [userId, setUserId] = useState<number | null>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [shouldRenderMenu, setShouldRenderMenu] = useState(false);
   const [menuHeight, setMenuHeight] = useState(0);
@@ -19,18 +21,26 @@ export default function PantallaFacturas() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editando, setEditando] = useState(false);
   const navigation = useNavigation();
-
   const [facturaAEliminar, setFacturaAEliminar] = useState<Factura | null>(null);
   const queryClient = useQueryClient();
 
-  // Consulta de facturas resueltas para el técnico
-  const facturasQuery = useQuery<Factura[], Error>({
-    queryKey: ['facturas-tecnico', user?.id],
-    queryFn: () => getFacturasResueltasPorTecnico(user.id),
-    enabled: !!user?.id,
-  });
+  useEffect(() => {
+    if (user?.email) {
+      getUsuarioIdByEmail(user.email).then(id => {
+        setUserId(id);
+        console.log("ID obtenido por email:", id);
+      });
+    }
+  }, [user]);
 
-  
+  const facturasQuery = useQuery<Factura[], Error>({
+    queryKey: ['facturas-tecnico', userId],
+    queryFn: () => {
+      if (!userId) throw new Error("No hay userId disponible");
+      return getFacturasResueltasPorTecnico(userId);
+    },
+    enabled: !!userId,
+  });
 
   const handleEliminarFactura = async () => {
     if (facturaAEliminar) {
@@ -57,11 +67,13 @@ export default function PantallaFacturas() {
     }
   }, [showMenu, shouldRenderMenu]);
 
+  if (!userId) return <Text>Cargando técnico...</Text>;
+
   return (
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.iconoFlecha}
-        onPress={() => navigation.goBack()}
+        onPress={() => router.push('/autonomo')}
         activeOpacity={0.8}
       >
         <Ionicons name="arrow-back" size={28} color="#2edbd1" />
@@ -77,7 +89,6 @@ export default function PantallaFacturas() {
       </TouchableOpacity>
       <View style={styles.card}>
         {/* Menú animado */}
-        
         {shouldRenderMenu && (
           <MotiView
             from={{ opacity: 0, scale: 0.95 }}
@@ -98,20 +109,6 @@ export default function PantallaFacturas() {
             onLayout={event => setMenuHeight(event.nativeEvent.layout.height)}
           >
             <TouchableOpacity
-              style={styles.menuButtonAniadir}
-              // onPress={() => { router.push('/facturas/formularioFactura'); }}
-            >
-              <Text style={styles.menuButtonText}>Añadir</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuButtonEditar}
-              onPress={() => setEditando(prev => !prev)}
-            >
-              <Text style={styles.menuButtonText}>
-                {editando ? 'SALIR' : 'Editar'}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
               style={styles.menuButtonEliminar}
               onPress={() => setEliminando(prev => !prev)}
             >
@@ -121,8 +118,7 @@ export default function PantallaFacturas() {
             </TouchableOpacity>
           </MotiView>
         )}
-     
-        {/* Lista animada */}
+
         <MotiView
           animate={{ marginTop: showMenu ? menuHeight : 25 }}
           transition={{
@@ -140,22 +136,13 @@ export default function PantallaFacturas() {
               if (eliminando) {
                 setFacturaAEliminar(factura);
                 setModalVisible(true);
-              } else if (editando) {
-                router.push({
-                  pathname: '/facturas/editarFactura',
-                  params: { numero_factura: factura.numero_factura.toString() }
-                });
-                setEditando(false);
               } else {
-                // Aquí aseguramos la navegación correcta al detalle
                 router.push(`/facturas/${factura.numero_factura}`);
               }
             }}
           />
         </MotiView>
-        
 
-        {/* Modal de confirmación */}
         <Modal
           animationType="fade"
           transparent={true}
@@ -196,6 +183,8 @@ export default function PantallaFacturas() {
     </View>
   );
 }
+
+// ...los estilos igual que antes...
 
 const styles = StyleSheet.create({
   // ... igual que los estilos que pasaste, pero cambia nombres a headerFacturas y demás si quieres

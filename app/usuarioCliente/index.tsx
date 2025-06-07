@@ -5,12 +5,10 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthProvider';
 
-export default function AutonomoHomeScreen() {
+export default function PantallaInicioCliente() {
   const { user, loading, logout } = useAuth();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-
-  
 
   if (loading || !user) {
     return <Text style={{ color: "#2edbd1", fontSize: 24, marginTop: 70 }}>Cargando...</Text>;
@@ -23,6 +21,7 @@ export default function AutonomoHomeScreen() {
   };
 
   return (
+    <>
     <View style={[styles.container, { paddingTop: insets.top + 50 }]}>
       {/* Botón logout arriba a la derecha */}
       <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.7}>
@@ -33,33 +32,18 @@ export default function AutonomoHomeScreen() {
       {/* Cabecera con saludo */}
       <View style={styles.header}>
         <Text style={styles.saludo}>¡Hola, {user.nombre}!</Text>
-        <Text style={styles.subtitulo}>Panel de gestión de tu negocio</Text>
+        <Text style={styles.subtitulo}>Aquí podrás reportar tus incidencias</Text>
       </View>
 
       <ScrollView contentContainerStyle={[styles.grid, { paddingTop: 80 }]} showsVerticalScrollIndicator={false}>
         <Card
-          title="Incidencias"
+          title="Reportar Incidencia"
           icon="🛠️"
           color="#ffe082"
-          onPress={() => router.push('/incidencias')} badge={undefined}        />
-        <Card
-          title="Clientes"
-          icon="👥"
-          color="#aed581"
-          onPress={() => router.push('/clientes')} badge={undefined}        />
-        <Card
-          title="Facturas"
-          icon="💼"
-          color="#81d4fa"
-          onPress={() => router.push('/facturas')} badge={undefined}        />
-        <Card
-          title="Productos"
-          icon="🔩"
-          color="#b39ddb"
-           onPress={() => router.push('/productos')}
-        />
+          onPress={() => router.push('/incidencias/crearIncidenciaForm')} badge={undefined}        />
       </ScrollView>
     </View>
+    </>
   );
 }
 
@@ -89,7 +73,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
-    paddingTop: 80,
+    paddingTop: 70,
     paddingHorizontal: 16,
   },
   logoutBtn: {
@@ -109,7 +93,7 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 10,
     alignItems: 'center',
-    marginTop: 34
+    marginTop: 50
   },
   saludo: {
     fontSize: 28,

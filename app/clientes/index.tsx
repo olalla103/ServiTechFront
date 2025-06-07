@@ -2,7 +2,7 @@ import { Usuario } from '@/types/usuario';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@react-navigation/elements';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { router, useFocusEffect, useNavigation } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { MotiView } from 'moti';
 import React, { useEffect, useState } from 'react';
 import { Modal, StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -12,6 +12,7 @@ import { eliminarUsuario, getClientesPorEmpresa } from '../../utils/handler_usua
 
 export default function PantallaClientes() {
   const { user } = useAuth();
+  console.log("👤 Técnico en pantalla clientes:", user);
   const [showMenu, setShowMenu] = useState(false);
   const [shouldRenderMenu, setShouldRenderMenu] = useState(false);
   const [menuHeight, setMenuHeight] = useState(0);
@@ -19,7 +20,6 @@ export default function PantallaClientes() {
   const [clienteAEliminar, setClienteAEliminar] = useState<Usuario | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [editando, setEditando] = useState(false);
-  const navigation = useNavigation();
 
   const queryClient = useQueryClient();
 
@@ -66,7 +66,7 @@ export default function PantallaClientes() {
     <View style={styles.container}>
       <TouchableOpacity
        style={styles.iconoFlecha}
-       onPress={() => navigation.goBack()}
+       onPress={() => router.push('/autonomo')}
        activeOpacity={0.8}
      >
        <Ionicons name="arrow-back" size={28} color="#2edbd1" />

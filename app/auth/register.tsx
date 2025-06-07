@@ -189,14 +189,14 @@ export default function RegisterScreen() {
             <TextInput
               value={especialidad}
               onChangeText={setEspecialidad}
-              placeholder="Especialidad (opcional)"
+              placeholder="Especialidad (técnic@s)"
               placeholderTextColor="#fff"
               style={styles.input}
             />
             <TextInput
               value={numeroSS}
               onChangeText={setNumeroSS}
-              placeholder="Nº Seguridad Social (opcional)"
+              placeholder="Nº Seguridad Social (técnic@s)"
               placeholderTextColor="#fff"
               keyboardType="number-pad"
               style={styles.input}
@@ -317,6 +317,7 @@ const styles = StyleSheet.create({
   },
   logo: {
     fontSize: 60,
+    marginTop:80,
     marginBottom: 16,
     textShadowColor: '#0006',
     textShadowOffset: { width: 2, height: 4 },

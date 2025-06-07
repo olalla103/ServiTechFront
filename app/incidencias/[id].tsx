@@ -1,3 +1,4 @@
+import { getFacturaPorIncidenciaId } from '@/utils/handler_facturas';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
@@ -13,6 +14,20 @@ export default function DetalleIncidenciaScreen() {
 
   const [mostrarModalSalida, setMostrarModalSalida] = useState(false);
   const [cronometroIniciado, setCronometroIniciado] = useState(false);
+  
+  
+const { data: facturaIncidencia, isLoading: loadingFactura } = useQuery({
+  queryKey: ['facturaIncidencia', incidenciaId],
+  queryFn: () => getFacturaPorIncidenciaId(incidenciaId),
+  enabled: !!incidenciaId,
+});
+
+// Ya puedes usar:
+const facturada = !!facturaIncidencia;
+
+
+
+
 
   // 1. Obtener la incidencia
   const { data: incidencia, isLoading, error, refetch } = useQuery({
@@ -152,19 +167,29 @@ export default function DetalleIncidenciaScreen() {
                 {incidencia.horas ? incidencia.horas : "No registrado"}
               </Text>
             </View>
-            <TouchableOpacity
-              style={styles.boton}
-              onPress={() => router.push({
-                pathname: '/facturas/formularioFactura',
-                params: {
-                  incidenciaId: incidencia.id,
-                  clienteId: clienteId,
-                  tecnicoId: tecnicoId,
-                }
-              })}
-            >
-              <Text style={styles.botonTexto}>Crear Factura</Text>
-            </TouchableOpacity>
+          <TouchableOpacity
+  style={[
+    styles.boton,
+    { backgroundColor: facturada ? '#b3b3b3' : '#2edbd1' }
+  ]}
+  disabled={facturada}
+  onPress={async() => {
+    if (facturada) return;
+    router.push({
+      pathname: '/facturas/formularioFactura',
+      params: {
+        incidenciaId: incidencia.id,
+        clienteId: clienteId,
+        tecnicoId: tecnicoId,
+      }
+    });
+  }}
+>
+  <Text style={styles.botonTexto}>
+    {facturada ? "Factura ya creada" : "Crear Factura"}
+  </Text>
+</TouchableOpacity>
+
           </>
         )}
 

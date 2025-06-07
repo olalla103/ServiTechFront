@@ -1,7 +1,8 @@
+import { getUsuarioIdByEmail } from '@/utils/handler_usuarios';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { useFocusEffect, useNavigation } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ListaIncidencias from '../../components/ListaIncidencias';
 import { useAuth } from '../../context/AuthProvider';
@@ -13,65 +14,88 @@ import {
 
 export default function PantallaIncidencias() {
   const navigation = useNavigation();
-
-    useFocusEffect(
-    React.useCallback(() => {
-      enReparacionQuery.refetch();
-      pendientesQuery.refetch();
-      resueltasQuery.refetch();
-    }, [])
-  );
-  
+  const [userId, setUserId] = useState<number | null>(null);
   const { user } = useAuth();
-  console.log("CARGANDO /incidencias/index.tsx");
+  console.log("👤 Técnico en pantalla incidencias:", user);
 
+  // Obtener id por email solo una vez que tengamos usuario y email
+  useEffect(() => {
+    if (user?.email) {
+      getUsuarioIdByEmail(user.email).then(id => {
+        setUserId(id);
+        console.log("ID obtenido por email:", id);
+      });
+    }
+  }, [user]);
+
+  // Espera a tener el id antes de hacer las queries
   const enReparacionQuery = useQuery({
-    queryKey: ['incidencias-en-reparacion', user?.id],
-    queryFn: () => getIncidenciasEnReparacionPorTecnico(user.id),
-    enabled: !!user?.id,
+    queryKey: ['incidencias-en-reparacion', userId],
+    queryFn: () => {
+      if (userId === null) throw new Error("No hay userId disponible");
+      return getIncidenciasEnReparacionPorTecnico(userId);
+    },
+    enabled: !!userId,
   });
 
   const pendientesQuery = useQuery({
-    queryKey: ['incidencias-pendientes', user?.id],
-    queryFn: () => getIncidenciasPendientesPorTecnico(user.id),
-    enabled: !!user?.id,
+    queryKey: ['incidencias-pendientes', userId],
+    queryFn: () => {
+      if (userId === null) throw new Error("No hay userId disponible");
+      return getIncidenciasPendientesPorTecnico(userId); // <--- CORRECTO
+    },
+    enabled: !!userId,
   });
 
   const resueltasQuery = useQuery({
-    queryKey: ['incidencias-resueltas', user?.id],
-    queryFn: () => getIncidenciasResueltasPorTecnico(user.id),
-    enabled: !!user?.id,
+    queryKey: ['incidencias-resueltas', userId],
+    queryFn: () => {
+      if (userId === null) throw new Error("No hay userId disponible");
+      return getIncidenciasResueltasPorTecnico(userId); // <--- CORRECTO
+    },
+    enabled: !!userId,
   });
 
+  // Actualiza las queries cuando cambias de pantalla
+  useFocusEffect(
+    React.useCallback(() => {
+      if (userId) {
+        enReparacionQuery.refetch();
+        pendientesQuery.refetch();
+        resueltasQuery.refetch();
+      }
+    }, [userId])
+  );
+
+  // Muestra loader mientras no tienes el userId
+  if (!userId) return <Text>Cargando técnico...</Text>;
 
   return (
     <>
-  <TouchableOpacity
-  style={styles.iconoFlecha}
-  onPress={() => navigation.goBack()}
-  activeOpacity={0.8}
->
-  <Ionicons name="arrow-back" size={28} color="#2edbd1" />
-</TouchableOpacity>
+      <TouchableOpacity
+        style={styles.iconoFlecha}
+        onPress={() => navigation.goBack()}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="arrow-back" size={28} color="#2edbd1" />
+      </TouchableOpacity>
 
-
-  <View style={styles.fondoApp}>
-    <Text style={styles.headerIncidencias}>
-      Incidencias
-    </Text>
-    <Text style={styles.subHeader}>
-      Pulsa una incidencia para ver su detalle.
-    </Text>
-    <View style={styles.card}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 32,paddingHorizontal: 10 }}>
-        <ListaIncidencias title="Pendientes de asignación" query={pendientesQuery} />
-        <ListaIncidencias title="En reparación" query={enReparacionQuery} />
-        <ListaIncidencias title="Últimas finalizadas" query={resueltasQuery} />
-      </ScrollView>
-    </View>
-  </View>
-</>
-
+      <View style={styles.fondoApp}>
+        <Text style={styles.headerIncidencias}>
+          Incidencias
+        </Text>
+        <Text style={styles.subHeader}>
+          Pulsa una incidencia para ver su detalle.
+        </Text>
+        <View style={styles.card}>
+          <ScrollView contentContainerStyle={{ paddingBottom: 32, paddingHorizontal: 10 }}>
+            <ListaIncidencias title="Pendientes de asignación" query={pendientesQuery} />
+            <ListaIncidencias title="En reparación" query={enReparacionQuery} />
+            <ListaIncidencias title="Últimas finalizadas" query={resueltasQuery} />
+          </ScrollView>
+        </View>
+      </View>
+    </>
   );
 }
 
@@ -80,8 +104,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8fafc',
     paddingTop: 90,
-    // alignItems: 'center', // ¡Quita esto!
-    paddingHorizontal: 0,    // Mejor, padding fuera del card
+    paddingHorizontal: 0,
   },
   headerIncidencias: {
     fontSize: 30,
@@ -102,12 +125,12 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     width: '100%',
-    backgroundColor: '#f8fafc', // igual que el fondo, para look plano
-    borderRadius: 0,            // sin borde, para que todo sea plano
+    backgroundColor: '#f8fafc',
+    borderRadius: 0,
     paddingTop: 0,
     paddingBottom: 0,
     paddingHorizontal: 0,
-    shadowColor: 'transparent', // sin sombra, plano
+    shadowColor: 'transparent',
     elevation: 0,
   },
   iconoFlecha: {

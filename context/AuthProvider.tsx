@@ -40,6 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, contraseña: string) => {
     setLoading(true);
     try {
+      console.log("Usuario devuelto tras login:", user);
       const res = await verificarCredenciales(email, contraseña);
       if (res.access_token) {
         await SecureStore.setItemAsync('token', res.access_token);

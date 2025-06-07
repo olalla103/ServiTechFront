@@ -69,7 +69,7 @@ export async function getUsuarioEspecialidad(usuario_id: number) {
 
 // Crear usuario
 export async function crearUsuario(usuario: any) {
-  const res = await api.post('/usuarios', usuario);
+  const res = await api.post('/usuarios/', usuario);
   return res.data;
 }
 
@@ -97,10 +97,11 @@ export async function getClientesPorEmpresa(empresaId: string) {
   return res.data;
 }
 
-export async function getClienteById(clienteId: string) {
-  const res = await api.get(`/usuarios/clientes/${clienteId}`);
+export async function getClienteById(clienteId: string | number) {
+  const res = await api.get(`/usuarios/${clienteId}`);
   return res.data;
 }
+
 
 // --- 3. Eliminación ---
 
@@ -108,4 +109,28 @@ export async function getClienteById(clienteId: string) {
 export async function eliminarUsuario(usuario_id: number) {
   const res = await api.delete(`/usuarios/${usuario_id}`);
   return res.data;
+}
+
+// Obtener el primer técnico disponible de una empresa
+export async function getTecnicoIdByEmpresa(empresaId: number): Promise<number | null> {
+  try {
+    const res = await api.get(`/usuarios/tecnico/empresa/${empresaId}`);
+    return res.data.length > 0 ? res.data[0].id : null;
+  } catch (err) {
+    console.error("Error buscando técnico:", err);
+    return null;
+  }
+}
+
+export async function cambiarPassword(email: string, contraseña: string) {
+  try {
+    const res = await api.post('/usuarios/cambiar_password', {
+      email,
+      contraseña,
+    });
+    return res.data;
+  } catch (error) {
+    console.error("Error cambiando contraseña:", error);
+    throw error;
+  }
 }
